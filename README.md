@@ -44,7 +44,8 @@ With 4db, you certainly COULD model our example "the RDBMS way".  Let's take a l
 
 First, the Domain-Driven-Design-inspired approach
 
-<code>
+<pre><code>
+
 class PurachaseOrderHeader < Persistence
   
   include Identity
@@ -91,7 +92,7 @@ class PurachaseOrderLine < Persistence
 
 end
 
-</code>
+</code></pre>
 
 Before getting into some code that uses this objects, let's examine this schema declaration 'syntax' in more detail.
 
@@ -114,7 +115,10 @@ Some are called ITINs (Individual Taxpayer Identification Number) and are often 
 An SSN has a variety of validations that distinguish them from issued SSNs versus random, nine-digit numbers. The same applies to ITINs. Some business cases might need to know which people in their database have 
 ITINs and which have SSNs. So you could, for example, create a class such as this:
 
+<pre><code>
+
 class GovernmentId < Hash
+
   attr_accessible :type, :value
 
   def initialize type, value
@@ -127,11 +131,13 @@ class GovernmentId < Hash
     true
   end
 end
+</code></pre>
 
 You could now declare a schema field as follows:
 
+<pre><code>
     fields[ 'government_id' ] = { :required => true,       :type => GovernmentId,     :location => :local }
-
+</code></pre>
 
 Returning to our purchase order example, we left off the :location keyword of 'order_date'.  order_date's location is :local. This is the default for all fields but we've spelled it out here. The only other acceptable
 value for :location is :remote. If :location is :remote, then :type must be set to the name of a class that includes Identity. Or, alternatively, the :type can be set to Array and the :of keyword must be set to 
