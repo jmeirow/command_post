@@ -1,362 +1,269 @@
 require 'date'
-require_relative './spike.rb'
+require 'rspec'
+require_relative '../persistence/persistence.rb'
+require_relative '../identity/identity.rb'
+
+
+describe Persistence do 
+
+  context 'schema validation' do 
+  
+    it 'should complain if the schema is bad' do
+
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => true,       :type => String,    :location => :local  } 
+          fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  } 
+          self.class.init_schema fields  
+        end
+      end
+
+
+      some_class = SomeClass.new 
+      some_class.class.should eq(SomeClass)
+
+    end
+
+
+
+
+
+
+
+
+
+
+    it 'should raise an error when a instance of String is not used to identify a field.' do 
+ 
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ String              ] = { :required => true,       :type => String,    :location => :local  } 
+          fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  } 
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
+    end
+
+
+
+
+
+
+
+    it 'should raise an error when a keyword requires a value of true or false but gets neither.'  do 
+ 
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => flase,      :type => String,    :location => :local  } 
+          fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  }  
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
+    end
+
+
+
+
+
+
+
+    it 'should raise an error when a :location gets neither :remote or :local for a value.'  do 
+ 
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => true,        :type => String,    :location => :x  } 
+          fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  }  
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
+    end
+
+
+
+
+
+
+
+    it 'should raise an error when a :auto_load is true but type is not an Identity class.'  do 
+ 
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => true,       :type => String,    :location => :local, :auto_load => true  } 
+          fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  } 
+
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
+    end
+
+
+
+
+
+
+
+    it 'should raise an error when a :auto_load is true, :type is Array and :of is not supplied.'  do 
+ 
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => true,        :type => Array,     :location => :remote,   :auto_load => true  } 
+          fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
+
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
+    end
 
  
-  
-  results = Hash.new 
-  cnt = 0
-  
 
 
 
 
-  # ==> 1
-    class SomeClass < Persistence 
-    include Identity
 
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
+    it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but its value is not an Identity class.'  do 
+ 
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => false,       :type => Array,   :of => String,  :location => :remote, :auto_load => true  } 
+          fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
+
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
     end
 
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => true,       :type => String,    :location => :local  } 
-      fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-
-    c = SomeClass.new 
-  rescue 
-
-    results[cnt] = test
-  end
 
 
 
 
 
+    it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but its value is Persistent, but not an Identity class.'  do 
+ 
 
-  # ==> 2
-  class SomeClass < Persistence 
-    include Identity
+      class Helper < Persistence 
+      end 
 
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => true,        :type => Array,   :of => Helper,  :location => :remote, :auto_load => true  } 
+          fields[ 'last_name'         ] = { :required => true,        :type => String,                  :location => :local  } 
+
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
     end
 
-    def init_schema
 
-      fields = Hash.new
-      fields[ String              ] = { :required => true,       :type => String,    :location => :local  } 
-      fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[test] = 'failed'  
-  rescue 
-  end
+ 
 
 
 
+    it 'should raise an error when a :auto_load is true,  its value is Persistent, but not an Identity class.'  do 
+ 
 
+      class Helper < Persistence 
+      end 
 
+      class SomeClass < Persistence 
+        include Identity
 
-  # ==> 3
-  class SomeClass < Persistence 
-    include Identity
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => true,        :type => Helper,    :location => :remote, :auto_load => true  } 
+          fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
 
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
     end
 
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => :flase,       :type => String,    :location => :local  } 
-      fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
 
 
 
+    it 'should raise an error when an Identity class is the :type qnd location is :local.'  do 
+ 
 
-  # ==> 4
-  class SomeClass < Persistence 
-    include Identity
+      class Helper < Persistence
+        include Identity 
+      end 
 
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
+      class SomeClass < Persistence 
+        include Identity
+
+        def initialize
+          super
+          fields = Hash.new
+          fields[ 'first_name'        ] = { :required => true,        :type => Helper,    :location => :local   } 
+          fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
+          self.class.init_schema fields 
+        end
+      end
+
+      expect { some_class = SomeClass.new }.to raise_error 
+
     end
 
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :reeequired => false,       :type => String,    :location => :local  } 
-      fields[ 'last_name'         ] = { :required => true,           :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
-
-  # ==> 5
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => false,       :type => String,    :location => :x  } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
-
-
-
-  # ==> 6
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => false,       :type => String,    :location => :local, :auto_load => true  } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    c = SomeClass.new 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    results[cnt] = test
-  rescue 
-  end
-
-
-  # ==> 7
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => false,       :type => String,    :location => :remote, :auto_load => true  } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
-
-  # ==> 8
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => false,       :type => Array,     :location => :remote, :auto_load => true  } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
-
-
-    
-  # ==> 9
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => false,       :type => Array,   :of => String,  :location => :remote, :auto_load => true  } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
-
-
-
-  # ==> 9
-  class Helper < Persistence 
   end 
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => false,       :type => Array,   :of => Helper,  :location => :remote, :auto_load => true  } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
 
 
+end
 
 
-
-
-  # ==> 10
-  class Helper < Persistence 
-  end 
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => false,       :type => Helper,    :location => :remote, :auto_load => true  } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
-
-
-
-
-
-
-  # ==> 11
-  class Helper2 < Persistence 
-    include Identity
-  end 
-  class SomeClass < Persistence 
-    include Identity
-
-    def initialize
-      @data = Hash.new
-      @aggregate_info_set = false
-      init_schema
-    end
-
-    def init_schema
-
-      fields = Hash.new
-      fields[ 'first_name'        ] = { :required => true,        :type => Helper2,    :location => :local   } 
-      fields[ 'last_name'         ] = { :required => true,        :type => String,    :location => :local  } 
-      self.class.init_schema fields 
-    end
-  end
-  begin 
-    puts test =  "\n\n=====================  TEST  #{cnt+=1}   ========================"
-    c = SomeClass.new 
-    results[cnt] = test
-  rescue 
-  end
-
-
-  module A
-  end
-
-  class B
-    include A
-  end
-
-  x = B.new 
-  puts "is x an A?  #{x.is_a? A}"
-  puts "is B an A?  #{B.is_a? A}"
-
+ 

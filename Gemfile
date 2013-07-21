@@ -1,9 +1,10 @@
 source 'https://rubygems.org'
 gem 'faker'
-
+gem 'pg'
 
 gem 'pry'
 gem 'pry-debugger'
 gem 'rspec'
 gem 'rspec-core'
+gem 'rspec-expectations'
 gem 'sequel'
