@@ -157,6 +157,9 @@ the object).  The major point illustrated here is the value of using persistent 
 
 Now to persist this thing we would say something like this:
 
+
+<pre><code>
+
   hdr = PurchaseOrderHeader.new
   hdr.order_number = OrderNumberService.next_order_number  # a made up service we did not cover...
   hdr.order_date = Date.today
@@ -181,11 +184,13 @@ Now to persist this thing we would say something like this:
 
   hdr.order_lines = lines
 
-
+</code></pre>
 
   Now, if this were Rails/Active Record, you might exepct to see something like:
 
+<pre><code>
   hdr.save
+</code></pre>
 
   We don't do that here. Mutating data without caputing WHY it changed is root of all evil.
 
@@ -196,20 +201,29 @@ Now to persist this thing we would say something like this:
 
   Omitting for now the code inside of the the command, here's how we'd persist this purchase order to the 4db database:
   
+<pre><code>
 
   cmd = CommandCreateNewPurchaseOrder.new hdr
   cmd.execute
+
+</code></pre>
 
   Now to retrieve the order number in its entirety, we can use a variety of methods:
 
   TO RETRIEVE WHEN WE KNOW THE 'AGGREGATE_ID' (essentialy an identity column, though not contiguously sequential because the same sequence is used for ALL aggregates (Identity objects) within our system)
 
+<pre><code>
+
   po = PurchaseOrder.find(id)
+
+</code></pre>
+
 
   The above is just a shortcut to the longer form:
 
+<pre><code>
   po = Aggregate.get_by_aggregate_id PurchaseOrder, id 
-
+</code></pre>
 
   Reflecting back for a minute to the PurchaseOrder class, you'll see a method after the initalizer called set_aggregate_lookup_value. This allows us to look up an aggregate by its 'real world unique identifier'.
 
