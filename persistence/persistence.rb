@@ -23,10 +23,10 @@ class Persistence
   end
 
   def set_data data_hash
-    if @aggregate_info_set == false 
-      @aggregate_info_set = true
-      @data = data_hash
-    end
+    @data = data_hash
+    # if @aggregate_info_set == false 
+    #   @aggregate_info_set = true
+    # end
   end
 
   def get_data name 
@@ -84,6 +84,8 @@ class Persistence
   end
 
   def to_h 
+
+    @data
   end
 
   def self.all
@@ -108,7 +110,8 @@ class Persistence
   def self.load_from_hash the_class, data_hash 
     object =  the_class.new
     object.set_data  data_hash
-    object.populate_auto_load_fields unless self.bypass_auto_load == true
+    object.populate_auto_load_fields #unless self.bypass_auto_load == true
+    object.populate_local_persitent_objects
     object
   end
 

@@ -2,14 +2,18 @@
 module AutoLoad
 
   def auto_load_fields
-    fields = schema_fields.select {|key, value| value[:auto_load] == true }.keys
-    fields
+
+    schema_fields.select {|key, value| value[:auto_load] == true }.keys
   end
   
 
+  def local_peristent_fields
+
+    schema_fields.select {|key, value| value[:location] == :local && value[:type].superclass == Persistence }.keys
+  end
+
   def populate_auto_load_fields 
     auto_load_fields.select {|x| @data.keys.include? x}.each do |field|
-      puts "auto_loading field...#{field}"
       if @data[field].class == Array
         if schema_fields[field][:location] == :remote
           array_of_objects = Array.new 
@@ -26,10 +30,7 @@ module AutoLoad
           @data[field] += array_of_objects
         end
       else
-        p "debugging"
-        p field 
-        pp @data
-        @data[field] = Aggregate.get_by_aggregate_id(Object.const_get(@data[field]['aggregate_type']), @data[field]['aggregate_id'])
+        @data[field] = Aggregate.get_by_aggregate_id( schema_fields[field][:type], @data[field]['aggregate_id'])
       end
     end
   end
@@ -52,9 +53,12 @@ module AutoLoad
     result
   end
 
-  def convert_persitence_objects_to_hash
-
-  end
-
+  def populate_local_persitent_objects
+    local_peristent_fields.each do |field|
+      klass = schema_fields[field][:type]
+      @data[field] = klass.load_from_hash klass, @data[field]
+      @data[field].populate_local_persitent_objects
+    end
+  end  
 
 end

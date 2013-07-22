@@ -1,75 +1,99 @@
 
 
 module DataValidation
-  
 
-  def verify_data  
-    @data_errors = []
-    data_ok = true
+  def missing_required_field field_name, field_info
 
-    schema_fields.each do |field_name, field_info|
-      # are any required fields missing?
-      if @data[field_name.to_s].nil? && field_info[:required] == true
-        data_ok = false
-        @data_errors << "required field '#{field_name}' is missing."
-      end
+    @data.keys.include?(field_name)==false && field_info[:required] == true
+  end
 
-      # if a field's been set, is it the correct type?
-      if @data[field_name] != nil && (@data[field_name].class !=  field_info[:type])
-        data_ok = false 
-        @data_errors << "#{field_name}: expected type: #{field_info[:type].name}, but received type #{@data[field_name].class.name}."
-      end
+  def data_type_does_not_match_declaration field_name, field_info
 
-      # if a field's been set, is it the correct type?
-      if @data[field_name] != nil && (@data[field_name].class !=  Array &&  field_info[:allowed_values] )
-        if field_info[:allowed_values].class != Array 
-          data_ok = false 
-          @data_errors << "#{field_name}: Allowed Values was declared but values must be supplied in an array."
-        end
-        if @data[field_name] != nil && ( field_info[:allowed_values].include?(@data[field_name]) == false  )
-          data_ok = false 
-          @data_errors << "#{field_name}: The value supplied was not in the list of acceptable values."
-        end
-      end
+    @data[field_name] != nil  &&  (@data[field_name].class !=  field_info[:type])
+  end
 
+  def allowed_values_declared_but_array_of_values_not_supplied field_name, field_info 
 
-      if (@data[field_name.to_s] != nil) && (@data[field_name].class == Array) && (field_info[:type] == Array) && (field_info[:local] == true)
-        if field_info[:of].nil? || field_info[:of] == nil 
-          data_ok = false 
-          @data_errors << "#{field_name}: is an Array, but the ':of' keyword was not set to declare the class type for objects in the array."
-        else 
-          # OK, :of was declared, forge ahead and check any objects in the array for the correct type (these are all local, no worries about aggregate pointer)
-          if field_info[:location] == :local
-            expected_type = field_info[:of]
-            @data[field_name.to_s].each do |object_in_array|
-              if object_in_array.class != expected_type 
-                data_ok = false 
-                @data_errors << "#{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class}."
-              end
-            end
-          end
-        end
-      end    
+    (@data[field_name] != nil)  &&  (@data[field_name].class !=  Array)  &&  (field_info[:allowed_values])  &&  (field_info[:allowed_values].class != Array) 
+  end
 
+  def value_not_among_the_list_of_allowed_values field_name, field_info
 
-      if (@data[field_name.to_s] != nil) && (@data[field_name].class == Array) && (field_info[:type] == Array) && (field_info[:local] == false)
-        # OK, :of was declared, forge ahead and check any objects in the array for the correct type (these are all local, no worries about aggregate pointer)
+    (@data[field_name] != nil)  &&  (@data[field_name].class !=  Array)  &&  (field_info[:allowed_values])  &&  (field_info[:allowed_values].include?(@data[field_name]) == false  )
+  end
+
+  def type_is_array_but_keyword___of___not_supplied field_name, field_info
+
+    (@data[field_name.to_s] != nil) && (@data[field_name].class == Array) && (field_info[:type] == Array) && (field_info[:local] == true) && ((!field_info.keys.include?(:of)) || field_info[:of].nil?)
+  end
+
+  def accepted_values_supplied_but_they_are_not_all_the_same_type(field_name, field_info)
+    if (@data[field_name.to_s] != nil) && (@data[field_name].class == Array) && (field_info[:type] == Array) && (field_info[:local] == true)
+      if field_info[:location] == :local
         expected_type = field_info[:of]
         @data[field_name.to_s].each do |object_in_array|
-          if (object_in_array.class != expected_type) && (object_in_array.class != AggregatePointer) 
-            data_ok = false 
-            @data_errors << "#{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class} or of AggregatePointer."
+          if object_in_array.class != expected_type 
+            return true
           end
         end
+      end
+    end    
+  end
+
+  def field_is_array_of_remote_objects_but_array_has_values_other_than_persistence_or_identity(field_name, field_info)
+    if (@data[field_name.to_s] != nil) && (@data[field_name].class == Array) && (field_info[:type] == Array) && (field_info[:location] == :remote)
+      # OK, :of was declared, forge ahead and check any objects in the array for the correct type (these are all local, no worries about aggregate pointer)
+      expected_type = field_info[:of]
+      @data[field_name.to_s].each do |object_in_array|
+        if (object_in_array.class != expected_type) && (object_in_array.class != AggregatePointer) 
+          return ["#{self.class}: #{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class} or of AggregatePointer."]
+        end
+      end
+    end 
+  end
+
+
+  def verify_data  
+
+    errors = Array.new 
+
+    schema_fields.each do |field_name, field_info|
+      if missing_required_field(field_name, field_info) 
+
+        errors << "#{self.class}:#{field_name} - is a required field." 
+      end
+      if data_type_does_not_match_declaration(field_name, field_info) 
+
+        errors << "#{self.class}: #{field_name}: expected type: #{field_info[:type].name}, but received type #{@data[field_name].class.name}."  
       end 
+      if allowed_values_declared_but_array_of_values_not_supplied(field_name, field_info) 
+
+        errors << "#{self.class}: #{field_name}: expected type: #{field_info[:type].name}, but received type #{@data[field_name].class.name}."  
+      end 
+      if value_not_among_the_list_of_allowed_values(field_name, field_info) 
+
+        errors << "#{self.class}: #{field_name}: The value supplied was not in the list of acceptable values."
+      end
+      if type_is_array_but_keyword___of___not_supplied(field_name, field_info)
+
+        errors << "#{self.class}: #{field_name}: is an Array, but the ':of' keyword was not set to declare the class type for objects in the array."
+      end 
+      if accepted_values_supplied_but_they_are_not_all_the_same_type(field_name, field_info)
+        
+        errors << "#{self.class}: #{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class}."
+      end
+      if field_is_array_of_remote_objects_but_array_has_values_other_than_persistence_or_identity(field_name, field_info)
+   
+        errors << "#{self.class}: #{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class} or of AggregatePointer." 
+      end
     end
-    data_ok
+    errors 
   end
 
 
   def data_errors
+
     verify_data
-    @data_errors
   end
 
 
@@ -80,10 +104,8 @@ module DataValidation
 
 
   def valid?
-
-    verify_data 
+    
+    verify_data.length == 0 
   end
-
-
 
 end

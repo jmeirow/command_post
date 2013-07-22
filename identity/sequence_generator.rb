@@ -30,7 +30,7 @@ class SequenceGenerator
   def self.misc
     @@DB ||= Connection.db_cqrs
     val = 0
-    @@DB.fetch("SELECT nextval('ssn');") do |row|
+    @@DB.fetch("SELECT nextval('misc');") do |row|
       val = row[row.keys.first]
     end
     val
@@ -38,6 +38,4 @@ class SequenceGenerator
 
 end
 
-puts SequenceGenerator.aggregate_id
-
-puts SequenceGenerator.transaction_id
+ 

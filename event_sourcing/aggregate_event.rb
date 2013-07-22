@@ -18,13 +18,12 @@ class AggregateEvent
   def initialize
     @transaction_id = SequenceGenerator.transaction_id
     @transacted = Time.now 
-    @object = nil
-    @changes = nil
+    @object = @changes = nil
   end
 
   def publish 
     if changes
-      save_event_changes
+      save_event changes
     elsif object
       save_event object.to_h
     else
@@ -33,34 +32,7 @@ class AggregateEvent
   end
 
 
-  # def mutate
-  #   @call_stack = caller if $debug
-  #   if changes.class != Hash 
-  #     raise "changes must be a Hash."
-  #   end
-  #   klass = Object.const_get(aggregate_type)
-  #   if changes.keys.length != (klass.schema_fields.keys & changes.keys).length
-  #     raise "Invalid fields in assignment"
-  #   else 
-  #     changes.each do |k,v|
-  #      raise ("Invalid type assigned to #{k}") if v.class != klass.schema_fields[k]['type']
-  #     end
-  #   end
-  #   save_event changes   
-  # end
-
-
-  # def create 
-  #   @call_stack = caller if $debug
-  #   if object.kind_of?(Persistence) == false
-  #     raise "object must be of type Persistence."
-  #   end
-  #   # if object.valid? == false 
-  #   #   raise "object #{object.class} is invalid. #{object.data_errors}" 
-  #   # end
-  #   save_event object.to_h
-  # end
-
+  
 
 
 
@@ -84,8 +56,8 @@ class AggregateEvent
 
   private
   def save_event change 
-    content = change
-    json = JSON.generate(content)
+    puts change
+    json = JSON.generate(change)
     @@prepared_statement.call(
                           :aggregate_type => @aggregate_type, 
                           :aggregate_id => @aggregate_id,
