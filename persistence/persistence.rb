@@ -54,7 +54,7 @@ class Persistence
 
     name = nm.to_s
     if name.end_with?('=') == false
-      if schema_fields.keys.include? name
+      if @data.keys.include? name
         klass =  schema_fields[name][:type]
         if klass.kind_of?Persistence
           klass.load_from_hash klass, get_data(name)
