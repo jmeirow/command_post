@@ -44,7 +44,6 @@ class Aggregate
 
 
   def self.where(aggregate_type)
-    puts "Aggregate Type in 'where' is #{aggregate_type}"
     results = Array.new
       $DB.fetch("SELECT * FROM aggregates WHERE aggregate_type = ?", aggregate_type.to_s) do |row|
       hash =  JSON.parse(row[:content])

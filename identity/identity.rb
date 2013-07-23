@@ -33,7 +33,6 @@ module Identity
   
 
   def self.select (&block) 
-    puts "Class in select is #{self}"
     Aggregate.where(self).select
   end
   

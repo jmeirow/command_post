@@ -56,7 +56,6 @@ class AggregateEvent
 
   private
   def save_event change 
-    puts change
     json = JSON.generate(change)
     @@prepared_statement.call(
                           :aggregate_type => @aggregate_type, 

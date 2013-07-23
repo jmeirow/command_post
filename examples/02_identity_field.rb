@@ -186,7 +186,7 @@ end
 
   puts "person first_name  : #{person.first_name}"
   puts "person city        : #{person.address.city}"
-  puts "person email       : #{pp person.address.contact_info.email_address}"
+  puts "person email       : #{person.address.contact_info.email_address}"
  
 
 
