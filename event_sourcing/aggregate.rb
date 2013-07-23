@@ -45,7 +45,7 @@ class Aggregate
 
   def self.where(aggregate_type)
     results = Array.new
-      $DB.fetch("SELECT * FROM aggregates WHERE aggregate_type = ?", aggregate_type.to_s) do |row|
+    $DB.fetch("SELECT * FROM aggregates WHERE aggregate_type = ?", aggregate_type.to_s) do |row|
       hash =  JSON.parse(row[:content])
       results << aggregate_type.load_from_hash( aggregate_type, hash)
     end

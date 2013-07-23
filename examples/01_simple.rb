@@ -51,19 +51,47 @@ class CommandPersonAdd
   end 
 end
 
- 
-50_000_000.times do  |i|
-  per = Person.new 
-  per.first_name = Faker::Name.first_name
-  per.last_name = Faker::Name.last_name
-  per.date_of_birth = Date.new(1970,7,10)
-  per.ssn =  "%09d" % SequenceGenerator.misc
 
-  cmd = CommandPersonAdd.new per 
-  person =  cmd.execute 
 
-  puts i if ((i % 1000)==0)
-end
+t1 = Time.now  
+x = Aggregate.get_by_aggregate_id(Person, 2_000_000)
+t2 = Time.now
+t3 = "%5d" % ((t2-t1)*1000)
+pp x 
+puts "Time to retrieve this record: #{t3} milliseconds. "
+
+
+
+
+
+#   cnt = 0
+#   $DB.fetch("SELECT count(*) as cnt FROM aggregates ") do |row|
+#     cnt =  row[:cnt]
+#   end
+
+# t1 = Time.now  
+# 50_000_000.times do  |i|
+#   per = Person.new 
+#   per.first_name = Faker::Name.first_name
+#   per.last_name = Faker::Name.last_name
+#   per.date_of_birth = Date.new(1970,7,10)
+#   per.ssn =  "%09d" % SequenceGenerator.misc
+
+#   cmd = CommandPersonAdd.new per 
+#   person =  cmd.execute 
+
+
+
+#   if ((i % 1000)==0)
+
+#     cnt += 1000
+#     t2 = Time.now
+#     t3 = "%5d" % ((t2-t1)*1000)
+#     puts "Time to create last 1k records: #{t3} milliseconds. Total count is now #{cnt}."
+#     t1 = Time.now 
+#   end
+
+# end
 
 
  

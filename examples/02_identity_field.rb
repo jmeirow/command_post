@@ -179,7 +179,6 @@ end
   cmd = CommandPersonAdd.new per 
   person =  cmd.execute 
 
-
   #----------------------------------
   # see how the objects are connected
   #----------------------------------
@@ -189,7 +188,12 @@ end
   puts "person email       : #{person.address.contact_info.email_address}"
  
 
-
+  t1 = Time.now  
+  x = Aggregate.get_by_aggregate_id(Person, person.aggregate_id)
+  t2 = Time.now
+  t3 = "%5d" % ((t2-t1)*1000)
+  pp x 
+  puts "Time to retrieve this record: #{t3} milliseconds. "
 
 
 
