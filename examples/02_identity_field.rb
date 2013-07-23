@@ -8,6 +8,26 @@ require_relative '../command/command.rb'
 
 
 
+class Person < Persistence
+  include Identity
+  def initialize
+    super
+    fields = Hash.new
+    fields[ 'first_name'        ] = { :required => true,       :type => String,        :location => :local  } 
+    fields[ 'last_name'         ] = { :required => true,       :type => String,        :location => :local  } 
+    fields[ 'date_of_birth'     ] = { :required => true,       :type => Date,          :location => :local  } 
+    fields[ 'ssn'               ] = { :required => true,       :type => String,        :location => :local  } 
+    fields[ 'address'           ] = { :required => true,       :type => Address,       :location => :local  } 
+    Person.init_schema fields     
+  end
+ 
+  def set_aggregate_lookup_value 
+    @data['aggregate_lookup_value'] =  ssn
+  end
+end
+
+
+
 class Address < Persistence
   def initialize
     super
@@ -42,24 +62,6 @@ end
 
 
 
-
-class Person < Persistence
-  include Identity
-  def initialize
-    super
-    fields = Hash.new
-    fields[ 'first_name'        ] = { :required => true,       :type => String,        :location => :local  } 
-    fields[ 'last_name'         ] = { :required => true,       :type => String,        :location => :local  } 
-    fields[ 'date_of_birth'     ] = { :required => true,       :type => Date,          :location => :local  } 
-    fields[ 'ssn'               ] = { :required => true,       :type => String,        :location => :local  } 
-    fields[ 'address'           ] = { :required => true,       :type => Address,       :location => :local  } 
-    Person.init_schema fields     
-  end
- 
-  def set_aggregate_lookup_value 
-    @data['aggregate_lookup_value'] =  ssn
-  end
-end
 
 
 
@@ -96,9 +98,44 @@ class CommandPersonAdd < Command
   end 
 end
 
- 
+class CommandPersonCorrectSSN < Command
+  
+  def initialize  person, ssn 
+    raise  ArgumentError.new("Expected Person") if (person.class != Person)
+    @person = person
+    @ssn = ssn
+  end
 
+  def execute  
+
+    errors = validate_persistent_fields @person, []
+    if errors.length > 0
+      raise "validation errors occurred:  #{pp errors}"
+    end 
+
+    event = AggregateEvent.new  
+    event.aggregate_id = SequenceGenerator.aggregate_id
+    event.aggregate_type = Person.to_s
+    event.event_description = "person created"
+    event.object = @person
+    event.user_id = 'joe'
+    @person.set_aggregate_lookup_value
+
+    if Aggregate.get_aggregate_by_lookup_value(Person, @person.ssn).empty? == false
+      raise "Person with this SSN already exists "
+    end
+
+    hashify_persistent_objects_before_save @person
+    event.publish 
+    Aggregate.get_by_aggregate_id(Person, event.aggregate_id)
+
+  end 
+end
+
+ 
+  #----------------------------------
   # create person object here...
+  #----------------------------------
 
   per = Person.new 
   per.first_name = 'Jane'
@@ -107,7 +144,9 @@ end
   per.ssn =  "%09d" % SequenceGenerator.misc
 
 
+  #----------------------------------
   # create address object here
+  #----------------------------------
 
   addr = Address.new 
   addr.address1 = '215 Main Street'
@@ -115,24 +154,40 @@ end
   addr.state = 'MI'
   addr.zipcode = '48065'
 
+
+  #----------------------------------
+  # create contect info object here.. 
+  #----------------------------------
+
   contact = ContactInfo.new 
   contact.email_address = 'some.person@gmail.com'
   contact.phone_number = '555-555-1212'
 
-  addr.contact_info = contact
 
-  # set the address field on person to the address object just created
+  #----------------------------------
+  # connect the objects together here
+  #----------------------------------
+
+  addr.contact_info = contact
   per.address = addr 
 
   
-  # execute the command to create the person
+  #----------------------------------
+  # execute a 'command' to save
+  #----------------------------------
+ 
   cmd = CommandPersonAdd.new per 
   person =  cmd.execute 
 
 
+  #----------------------------------
+  # see how the objects are connected
+  #----------------------------------
+
   puts "person first_name  : #{person.first_name}"
   puts "person city        : #{person.address.city}"
-  puts "person phone       : #{person.address.contact_info.phone}"
+  puts "person email       : #{pp person.address.contact_info.email_address}"
+ 
 
 
 

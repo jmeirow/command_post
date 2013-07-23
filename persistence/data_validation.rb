@@ -2,6 +2,60 @@
 
 module DataValidation
 
+
+
+  def empty?
+
+    @data.nil? || @data == {}
+  end
+
+  def valid?
+    
+    verify_data.length == 0 
+  end
+
+  def data_errors
+
+    verify_data
+  end
+  
+  def verify_data  
+
+    errors = Array.new 
+
+    schema_fields.each do |field_name, field_info|
+      if missing_required_field(field_name, field_info) 
+
+        errors << "#{self.class}:#{field_name} - is a required field." 
+      end
+      if data_type_does_not_match_declaration(field_name, field_info) 
+
+        errors << "#{self.class}: #{field_name}: expected type: #{field_info[:type].name}, but received type #{@data[field_name].class.name}."  
+      end 
+      if allowed_values_declared_but_array_of_values_not_supplied(field_name, field_info) 
+
+        errors << "#{self.class}: #{field_name}: expected type: #{field_info[:type].name}, but received type #{@data[field_name].class.name}."  
+      end 
+      if value_not_among_the_list_of_allowed_values(field_name, field_info) 
+
+        errors << "#{self.class}: #{field_name}: The value supplied was not in the list of acceptable values."
+      end
+      if type_is_array_but_keyword___of___not_supplied(field_name, field_info)
+
+        errors << "#{self.class}: #{field_name}: is an Array, but the ':of' keyword was not set to declare the class type for objects in the array."
+      end 
+      if accepted_values_supplied_but_they_are_not_all_the_same_type(field_name, field_info)
+        
+        errors << "#{self.class}: #{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class}."
+      end
+      if field_is_array_of_remote_objects_but_array_has_values_other_than_persistence_or_identity(field_name, field_info)
+   
+        errors << "#{self.class}: #{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class} or of AggregatePointer." 
+      end
+    end
+    errors 
+  end
+
   def missing_required_field field_name, field_info
 
     @data.keys.include?(field_name)==false && field_info[:required] == true
@@ -52,60 +106,5 @@ module DataValidation
     end 
   end
 
-
-  def verify_data  
-
-    errors = Array.new 
-
-    schema_fields.each do |field_name, field_info|
-      if missing_required_field(field_name, field_info) 
-
-        errors << "#{self.class}:#{field_name} - is a required field." 
-      end
-      if data_type_does_not_match_declaration(field_name, field_info) 
-
-        errors << "#{self.class}: #{field_name}: expected type: #{field_info[:type].name}, but received type #{@data[field_name].class.name}."  
-      end 
-      if allowed_values_declared_but_array_of_values_not_supplied(field_name, field_info) 
-
-        errors << "#{self.class}: #{field_name}: expected type: #{field_info[:type].name}, but received type #{@data[field_name].class.name}."  
-      end 
-      if value_not_among_the_list_of_allowed_values(field_name, field_info) 
-
-        errors << "#{self.class}: #{field_name}: The value supplied was not in the list of acceptable values."
-      end
-      if type_is_array_but_keyword___of___not_supplied(field_name, field_info)
-
-        errors << "#{self.class}: #{field_name}: is an Array, but the ':of' keyword was not set to declare the class type for objects in the array."
-      end 
-      if accepted_values_supplied_but_they_are_not_all_the_same_type(field_name, field_info)
-        
-        errors << "#{self.class}: #{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class}."
-      end
-      if field_is_array_of_remote_objects_but_array_has_values_other_than_persistence_or_identity(field_name, field_info)
-   
-        errors << "#{self.class}: #{field_name} is an Array and all objects should be of type #{expected_type} but one object was of type #{object_in_array.class} or of AggregatePointer." 
-      end
-    end
-    errors 
-  end
-
-
-  def data_errors
-
-    verify_data
-  end
-
-
-  def empty?
-
-    @data.nil? || @data == {}
-  end
-
-
-  def valid?
-    
-    verify_data.length == 0 
-  end
 
 end

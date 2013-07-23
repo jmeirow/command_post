@@ -21,8 +21,8 @@
 
 A word about Persitence vs Identity.
 
-* Persistence is what allows an "object" to be saved to the database. An object that inherits from Persistence and includes the Identity module can always be saved to the database.
-* A class that ONLY inherits from Persistence, but does not include the Identity module *CAN* be saved to the database but ONLY as the property of another object which must also an Identity object (or eventually reaches up to an Identity object)
+* In 4db, Persistence (a base-class) is what allows an "object" to be saved to the database. An object that inherits from Persistence and includes the Identity module can always be saved to the database.
+* A class that ONLY inherits from Persistence, but does not include the Identity module *CAN* be saved to the database but ONLY as the property of another object which must also be an Identity object (includes the Identity module) or eventually reaches up to an Identity object
 
 
 EXAMPLE: An example of Identity as contrasted against Persistence.

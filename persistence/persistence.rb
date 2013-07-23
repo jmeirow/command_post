@@ -48,9 +48,13 @@ class Persistence
   end
 
   def method_missing(nm, *args)
+    puts "\n\n\n================ START DATA DUMP from #{self.class} ==================="
+    puts "method_missing:  #{nm}, #{args}"
+    pp @data 
+
     name = nm.to_s
-    if name.end_with?('=') == false 
-      if @data.keys.include? name
+    if name.end_with?('=') == false
+      if schema_fields.keys.include? name
         klass =  schema_fields[name][:type]
         if klass.kind_of?Persistence
           klass.load_from_hash klass, get_data(name)

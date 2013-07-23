@@ -57,6 +57,7 @@ module AutoLoad
     local_peristent_fields.each do |field|
       klass = schema_fields[field][:type]
       @data[field] = klass.load_from_hash klass, @data[field]
+      puts "class of field is #{@data[field].class}"
       @data[field].populate_local_persitent_objects
     end
   end  
