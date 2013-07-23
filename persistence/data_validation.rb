@@ -57,6 +57,9 @@ module DataValidation
   end
 
   def missing_required_field field_name, field_info
+    puts "field_name in missing_required_fields check #{field_name}"
+    puts "I am in class #{self.class}"
+    puts "@data's class is #{@data.class}}"
 
     @data.keys.include?(field_name)==false && field_info[:required] == true
   end

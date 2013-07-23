@@ -24,9 +24,9 @@ class Persistence
 
   def set_data data_hash
     @data = data_hash
-    # if @aggregate_info_set == false 
-    #   @aggregate_info_set = true
-    # end
+    if @aggregate_info_set == false 
+      @aggregate_info_set = true
+    end
   end
 
   def get_data name 
@@ -48,15 +48,16 @@ class Persistence
   end
 
   def method_missing(nm, *args)
-    puts "\n\n\n================ START DATA DUMP from #{self.class} ==================="
-    puts "method_missing:  #{nm}, #{args}"
-    pp @data 
+    # puts "\n\n\n================ START DATA DUMP from #{self.class} ==================="
+    # puts "method_missing:  #{nm}, #{args}"
+    # puts "class of @data is #{@data.class}"
+    # pp @data 
 
     name = nm.to_s
     if name.end_with?('=') == false
       if @data.keys.include? name
         klass =  schema_fields[name][:type]
-        if klass.kind_of?Persistence
+        if klass.superclass == Persistence 
           klass.load_from_hash klass, get_data(name)
         else 
           get_data name 
@@ -111,11 +112,15 @@ class Persistence
     @@fields[self]
   end
 
-  def self.load_from_hash the_class, data_hash 
+  def self.load_from_hash the_class, data_hash
+    puts "LOAD FROM HASH INFO"
+    puts "MY class is #{self}"
+    puts "I am LOADING class #{the_class}"
+    puts "the hash = #{data_hash}"
     object =  the_class.new
     object.set_data  data_hash
     object.populate_auto_load_fields #unless self.bypass_auto_load == true
-    object.populate_local_persitent_objects
+    object.populate_local_persistent_objects
     object
   end
 
