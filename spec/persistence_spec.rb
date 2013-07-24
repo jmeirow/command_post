@@ -4,14 +4,14 @@ require_relative '../persistence/persistence.rb'
 require_relative '../identity/identity.rb'
 
 
-describe Persistence do 
+describe CommandPost::Persistence do 
 
   context 'schema validation' do 
   
     it 'should complain if the schema is bad' do
 
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -39,8 +39,8 @@ describe Persistence do
 
     it 'should raise an error when a instance of String is not used to identify a field.' do 
  
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -63,8 +63,8 @@ describe Persistence do
 
     it 'should raise an error when a keyword requires a value of true or false but gets neither.'  do 
  
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -87,8 +87,8 @@ describe Persistence do
 
     it 'should raise an error when a :location gets neither :remote or :local for a value.'  do 
  
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -109,10 +109,10 @@ describe Persistence do
 
 
 
-    it 'should raise an error when a :auto_load is true but type is not an Identity class.'  do 
+    it 'should raise an error when a :auto_load is true but type is not an CommandPost::Identity class.'  do 
  
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -136,8 +136,8 @@ describe Persistence do
 
     it 'should raise an error when a :auto_load is true, :type is Array and :of is not supplied.'  do 
  
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -159,10 +159,10 @@ describe Persistence do
 
 
 
-    it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but its value is not an Identity class.'  do 
+    it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but its value is not an CommandPost::Identity class.'  do 
  
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -183,14 +183,14 @@ describe Persistence do
 
 
 
-    it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but its value is Persistent, but not an Identity class.'  do 
+    it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but its value is Persistent, but not an CommandPost::Identity class.'  do 
  
 
-      class Helper < Persistence 
+      class Helper < CommandPost::Persistence 
       end 
 
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -211,14 +211,14 @@ describe Persistence do
 
 
 
-    it 'should raise an error when a :auto_load is true,  its value is Persistent, but not an Identity class.'  do 
+    it 'should raise an error when a :auto_load is true,  its value is Persistent, but not an CommandPost::Identity class.'  do 
  
 
-      class Helper < Persistence 
+      class Helper < CommandPost::Persistence 
       end 
 
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
@@ -237,15 +237,15 @@ describe Persistence do
 
 
 
-    it 'should raise an error when an Identity class is the :type qnd location is :local.'  do 
+    it 'should raise an error when an CommandPost::Identity class is the :type and location is :local.'  do 
  
 
-      class Helper < Persistence
-        include Identity 
+      class Helper < CommandPost::Persistence
+        include CommandPost::Identity 
       end 
 
-      class SomeClass < Persistence 
-        include Identity
+      class SomeClass < CommandPost::Persistence 
+        include CommandPost::Identity
 
         def initialize
           super
