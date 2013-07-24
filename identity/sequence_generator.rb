@@ -5,35 +5,38 @@ require 'sequel'
 require_relative '../db/connection.rb'
 
 
+module CommandPost
 
-class SequenceGenerator
+  class SequenceGenerator
 
 
-  def self.aggregate_id
-    @@DB ||= Connection.db_cqrs
-    val = 0
-    @@DB.fetch("SELECT nextval('aggregate');") do |row|
-      val = row[row.keys.first]
+    def self.aggregate_id
+      @@DB ||= Connection.db_cqrs
+      val = 0
+      @@DB.fetch("SELECT nextval('aggregate');") do |row|
+        val = row[row.keys.first]
+      end
+      val
     end
-    val
-  end
 
-  def self.transaction_id
-    @@DB ||= Connection.db_cqrs
-    val = 0
-    @@DB.fetch("SELECT nextval('transaction');") do |row|
-      val = row[row.keys.first]
+    def self.transaction_id
+      @@DB ||= Connection.db_cqrs
+      val = 0
+      @@DB.fetch("SELECT nextval('transaction');") do |row|
+        val = row[row.keys.first]
+      end
+      val
     end
-    val
-  end
 
-  def self.misc
-    @@DB ||= Connection.db_cqrs
-    val = 0
-    @@DB.fetch("SELECT nextval('misc');") do |row|
-      val = row[row.keys.first]
+    def self.misc
+      @@DB ||= Connection.db_cqrs
+      val = 0
+      @@DB.fetch("SELECT nextval('misc');") do |row|
+        val = row[row.keys.first]
+      end
+      val
     end
-    val
+
   end
 
 end

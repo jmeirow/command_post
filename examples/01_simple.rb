@@ -1,10 +1,13 @@
 require_relative '../persistence/persistence.rb'
 require_relative '../identity/identity.rb'
+require_relative '../command/command.rb'
 require 'faker'
 
 
-class Person < Persistence
-  include Identity
+
+
+class Person < CommandPost::Persistence
+  include CommandPost::Identity
   def initialize
     super
 
@@ -26,7 +29,7 @@ end
 
 
 
-class CommandPersonAdd
+class CommandPersonAdd < CommandPost::Command
   
   def initialize  person 
     raise  ArgumentError.new("Expected Person") if (person.class != Person)
@@ -36,7 +39,7 @@ class CommandPersonAdd
   def execute  
 
     event = AggregateEvent.new  
-    event.aggregate_id = SequenceGenerator.aggregate_id
+    event.aggregate_id = CommandPost::SequenceGenerator.aggregate_id
     event.aggregate_type = Person.to_s
     event.event_description = "person created"
     event.object = @person
@@ -47,20 +50,27 @@ class CommandPersonAdd
     dupe = Aggregate.get_aggregate_by_lookup_value(Person, @person.ssn)   
     raise "Person with this SSN already exists " if dupe != {}
     event.publish 
-    Aggregate.get_by_aggregate_id(Person, event.aggregate_id)
+    CommandPost::Aggregate.get_by_aggregate_id(Person, event.aggregate_id)
   end 
 end
 
 
 
 t1 = Time.now  
-x = Aggregate.get_by_aggregate_id(Person, 2_000_000)
+x = CommandPost::Aggregate.get_by_aggregate_id(Person, 2_000_000)
 t2 = Time.now
 t3 = "%5d" % ((t2-t1)*1000)
 pp x 
 puts "Time to retrieve this record: #{t3} milliseconds. "
 
+ 
 
+cnt = 0
+$DB.fetch("SELECT count(*) as cnt  FROM aggregates ") do |row|
+  cnt = row[:cnt]
+end
+
+puts "Total # of rows is #{cnt}"
 
 
 
