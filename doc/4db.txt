@@ -5,4 +5,6 @@ Life-cycle of a 4db object:
 
 Creation:
 
-Loa
+
+
+Created
