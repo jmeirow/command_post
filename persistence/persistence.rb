@@ -93,7 +93,7 @@ module CommandPost
     end
 
     def self.init_schema fields
-
+      @@fields ||= Hash.new
       schema_error_messages =  SchemaValidation.validate_schema(fields)
       if schema_error_messages.length > 0
         raise "The schema for #{self} had the following error(s): #{pp schema_error_messages}"
@@ -126,6 +126,10 @@ module CommandPost
       @@bypass[self]=value 
     end
 
-
+    def self.upcase? field_name
+      raise "field not found " if schema_fields.keys.include? field_name == false 
+      field_info = schema_fields[field_name]
+      field_info.keys.include?(:upcase) ? field_info[:upcase] : false
+    end
   end
 end

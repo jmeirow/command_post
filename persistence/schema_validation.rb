@@ -17,9 +17,10 @@ module CommandPost
       end
       errors 
     end
+
     def self.validate_keywords field_name, field_info 
       errors = Array.new 
-      keywords = [:required, :type, :of, :location, :auto_load, :allowed_values]
+      keywords = [:required, :type, :of, :location, :auto_load, :allowed_values, :upcase]
       field_info.keys.each do |key| 
         if keywords.include?(key)==false 
             errors << "Field Name: #{field_name} :  #{key} is an invalid keyword." 
