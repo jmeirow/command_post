@@ -18,7 +18,7 @@ module CommandPost
     @@required_by_txn = [ "aggregate_type", "aggregate_id", "event_description", "content", "transaction_id", "transacted" ]
 
     def initialize
-      @transaction_id = SequenceGenerator.transaction_id
+      #@transaction_id = SequenceGenerator.transaction_id
       @transacted = Time.now 
       @object = @changes = nil
     end
@@ -32,7 +32,10 @@ module CommandPost
         raise 'Event has no state to publish.'
       end
     end
-
+    
+    def self.publish event 
+      event.publish
+    end
 
     
 
@@ -58,6 +61,15 @@ module CommandPost
 
     private
     def save_event change 
+
+      puts "@aggregate_type       = #{@aggregate_type}   "
+      puts "@aggregate_id         = #{@aggregate_id}  "
+      puts "@transaction_id       = #{@transaction_id}   "
+      puts "@transacted           = #{@transacted}   "
+      puts "@event_description    = #{@event_description}   "
+      puts "@user_id              = #{@user_id}   "
+
+
       json = JSON.generate(change)
       @@prepared_statement.call(
                             :aggregate_type => @aggregate_type, 

@@ -22,9 +22,9 @@ module CommandPost
     def self.replace object
       content = JSON.generate object
     
-      aggregate_id = object['aggregate_info']['aggregate_id'] 
-      aggregate_type = object['aggregate_info']['aggregate_type'] 
-      version = object['aggregate_info']['version'].to_i
+      aggregate_id = object[:aggregate_info][:aggregate_id] 
+      aggregate_type = object[:aggregate_info][:aggregate_type] 
+      version = object[:aggregate_info][:version].to_i
       aggregate_lookup_value =  object['aggregate_lookup_value'] 
 
       if (version) == 1

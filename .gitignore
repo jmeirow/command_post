@@ -16,4 +16,7 @@ tmp
 .yardoc
 _yardoc
 doc/
+spike/
+examples/
+
 

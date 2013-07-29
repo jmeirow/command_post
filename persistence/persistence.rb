@@ -1,9 +1,11 @@
+
 require_relative '../event_sourcing/aggregate.rb'
 require_relative '../event_sourcing/aggregate_event.rb'
 require_relative '../persistence/persistence.rb'
 require_relative './schema_validation.rb'
 require_relative './data_validation.rb'
 require_relative './auto_load.rb'
+require_relative '../command/command.rb'
 
 
 module CommandPost
@@ -14,16 +16,21 @@ module CommandPost
     include AutoLoad
 
     def initialize 
-      @@fields ||= Hash.new
 
-      @data = Hash.new
+      @@fields ||= Hash.new
       @aggregate_info_set = false
+      @data = Hash.new
+      self.class.init_schema self.class.schema
+
+      Command.auto_generate self.class
     end
+
 
     def schema_fields 
       
       @@fields[self.class]
     end
+
 
     def set_data data_hash
       @data = data_hash
@@ -31,6 +38,7 @@ module CommandPost
         @aggregate_info_set = true
       end
     end
+
 
     def get_data name 
       if schema_fields[name][:location] == :local
@@ -50,12 +58,13 @@ module CommandPost
       end
     end
 
+
     def method_missing(nm, *args)
 
       name = nm.to_s
       if name.end_with?('=') == false
         if @data.keys.include? name
-            get_data name 
+            get_data name nm 
         else 
           if schema_fields.keys.include? name 
             return nil
@@ -70,42 +79,41 @@ module CommandPost
       else
         field_name = name.gsub(/\=/,'')
         if args.first.kind_of?Persistence 
-          @data[field_name] = args.first 
+          @data[field_name.to_sym] = args.first 
         else
-          @data[field_name] = args.first
+          @data[field_name.to_sym] = args.first
         end
       end
     end
+
 
     def aggregate_type
       
       @data['aggregate_info']['aggregate_type']
     end
 
+
     def to_h 
 
       @data
     end
+
 
     def self.all
 
       Aggregate.where(self)
     end
 
+
     def self.init_schema fields
-      @@fields ||= Hash.new
       schema_error_messages =  SchemaValidation.validate_schema(fields)
       if schema_error_messages.length > 0
-        raise "The schema for #{self} had the following error(s): #{pp schema_error_messages}"
+        raise ArgumentError, "The schema for #{self} had the following error(s): #{pp schema_error_messages}"
       end
       @@fields[self] ||= fields 
     end
 
-    def self.schema_fields 
-
-      @@fields[self]
-    end
-
+ 
     def self.load_from_hash the_class, data_hash
       object =  the_class.new
       object.set_data  data_hash
@@ -114,11 +122,13 @@ module CommandPost
       object
     end
 
+
     def self.bypass_auto_load
       @@bypass ||= Hash.new
       @@bypass[self] ||= false 
       @@bypass[self]
     end
+
     
     def self.bypass_auto_load=(value)
       @@bypass ||= Hash.new
@@ -126,10 +136,12 @@ module CommandPost
       @@bypass[self]=value 
     end
 
+
     def self.upcase? field_name
-      raise "field not found " if schema_fields.keys.include? field_name == false 
-      field_info = schema_fields[field_name]
+      raise ArgumentError ,"field not found " if (schema.keys.include?(field_name) == false) 
+      field_info = schema[field_name]
       field_info.keys.include?(:upcase) ? field_info[:upcase] : false
     end
+
   end
 end

@@ -39,7 +39,6 @@ module CommandPost
     end
     
     def to_pretty_pp
-      #raise Error "Stop right there! Before you go any further..."
       len = 0
       result  = ''
       @data.keys.map{|key| len = key.length if (key.length > len) }

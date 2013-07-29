@@ -1,10 +1,10 @@
 source 'https://rubygems.org'
-gem 'faker'
+
+gem 'sequel'
 gem 'pg'
 
-gem 'pry'
-gem 'pry-debugger'
-gem 'rspec'
-gem 'rspec-core'
-gem 'rspec-expectations'
-gem 'sequel'
+group :development, :test do
+  gem 'pry'
+  gem 'pry-debugger'
+  gem 'starting_blocks'
+end

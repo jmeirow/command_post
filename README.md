@@ -1,27 +1,27 @@
-4db
+CommandPost
 ===
 
-4db – A Ruby-based Domain Object Storage and Retrieval Library
+CommandPost – the Command Pattern, Object Storage and Event Sourcing 
 
 
 
 
-4db is a library that facilitates the retrieval and storage of objects. The objects are nothing more than Hashes, stored as JSON in a relational database. 4db has the following features to facillitate this:
+CommandPost is a library that facilitates the retrieval and storage of objects. The objects are nothing more than Hashes, stored as JSON in a relational database. CommandPost has the following features to facillitate this:
 
 *  A base class (Persistence) which encapsulates a Hash so as to allow dot notation access ( myobject.myproperty instead of myobject['myproperty']) as well as computational methods on the class.
 *  A schema declaration syntax which insures only valid objects are saved to the database 
 *  A module (Identity) the provides an identity to the object so that it may be persisted and retrieved later by its 'aggregate_id'.
 *  A fully-integrated 'at the core' event sourcing mechanism. Objects are not saved to the database until their 'change events' are first recorded to an event store. A single table (aggregate_events) holds every event 
-   that ever occurred to every object. It is relatively easy to picture the entire system as it appeared at a point in time. This will be even easier in future versions of 4db.
+   that ever occurred to every object. It is relatively easy to picture the entire system as it appeared at a point in time. This will be even easier in future versions of CommandPost.
 *  Say goodbye to database migrations. Two tables store all your objects. Development cycles become more nimble without the "friction" of keeping changes consistent between the code and a database. Simply add a new
    'field' to your class and it's done.
-*  Retrieves fully populated domain objects from the database. Application code does not own the step of wrangling hash-data into a business object. 4db does it for you. In fact, it's through your domain object declaration
-   that 4db even knows how to populate the hashes that eventually stored as JSON.
+*  Retrieves fully populated domain objects from the database. Application code does not own the step of wrangling hash-data into a business object. CommandPost does it for you. In fact, it's through your domain object declaration
+   that CommandPost even knows how to populate the hashes that eventually stored as JSON.
 
 
 A word about Persitence vs Identity.
 
-* In 4db, Persistence (a base-class) is what allows an "object" to be saved to the database. An object that inherits from Persistence and includes the Identity module can always be saved to the database.
+* In CommandPost, Persistence (a base-class) is what allows an "object" to be saved to the database. An object that inherits from Persistence and includes the Identity module can always be saved to the database.
 * A class that ONLY inherits from Persistence, but does not include the Identity module *CAN* be saved to the database but ONLY as the property of another object which must also be an Identity object (includes the Identity module) or eventually reaches up to an Identity object
 
 
@@ -29,16 +29,13 @@ EXAMPLE: An example of Identity as contrasted against Persistence.
 
 Consider a purchase order. It "header" information about the P.O. itself and it has many P.O. "lines".
 
-In a traditional RDBMS, this scenario is almost always modeled as two tables:  A po_header table and a po_lines table.  In this case, both parts of the PO become unqiuely identifiable, individually retrievable entities by 
-virtue of being rows on a table with po_lines most likely having a surrogate key that is an IDENTITY column.
+In a traditional RDBMS, this scenario is almost always modeled as two tables:  A po_header table and a po_lines table.  In this case, both parts of the PO become unqiuely identifiable, individually retrievable entities by virtue of being rows on a table with po_lines most likely having a surrogate key that is an IDENTITY column.
 
-In reality though, as Domain Driven Design points out, a purchase order line typically has no meaning, no value, unless viewed in the context of the P.O. as a whole. One *possible* way of modelling that is more in keeping with 
-DDD is to model the P.O. as a whole (for now we'll leave out discussions of SubDomains and BoundedContexts). Why model it as a whole? Because being able to retrieve the ENTIRE po with a single read operation preserves the natural 
-transactional boundary of the object. For instance, suppose that we want to maintain a field on the P.O. header that is essentially derived from sort of status of the lines. For convenience we just want to compute it has store
-it on the P.O. header. In an RDBMS, you would HAVE TO use a transaction if the state of a line changed in such a way that this stored field on the header. With 4db (which I can admit stands for  Domain Driven Design Database, get it?),
-with 4db, when the P.O. is modeled as a single object, there is only ONE write to the database, so the transaction is implicit, around the natual transactional boundaries of the object itself.
+In reality though, as Domain Driven Design points out, a purchase order line typically has no meaning, no value, unless viewed in the context of the P.O. as a whole. One *possible* way of modelling that is more in keeping with DDD is to model the P.O. as a whole (for now we'll leave out discussions of SubDomains and BoundedContexts). Why model it as a whole? Because being able to retrieve the ENTIRE po with a single read operation preserves the natural 
+transactional boundary of the object. For instance, suppose that we want to maintain a field on the P.O. header that is essentially derived from sort of status of the lines. For convenience we just want to compute it has storeit on the P.O. header. In an RDBMS, you would HAVE TO use a transaction if the state of a line changed in such a way that this stored field on the header. With CommandPost (which I can admit stands for  Domain Driven Design Database, get it?),
+with CommandPost, when the P.O. is modeled as a single object, there is only ONE write to the database, so the transaction is implicit, around the natual transactional boundaries of the object itself.
 
-With 4db, you certainly COULD model our example "the RDBMS way".  Let's take a look at how to model the PO in each of the two approaches.
+With CommandPost, you certainly COULD model our example "the RDBMS way".  Let's take a look at how to model the PO in each of the two approaches.
 
 
 
@@ -99,7 +96,7 @@ Before getting into some code that uses this objects, let's examine this schema 
 Starting with intializer of PurchaseOrderHeader, you can see we call 'super' right off the bat. That's because 'initialize' in Persistence sets up things we'll need.
 Next comes the schema declaration. Why talk about a "schema" for an object?  Well, I am the first to admit I am no fan of RDBMS for anything other than reporting and when I need aggregate functions that
 only RDBMSs can provide. I am also no fan of the "friction" RDBMS introduces into the development process. BUT... that doesn't mean I like to have some controls and order around things. There several SIGNIFICANT 
-advanatges that 4db storage provides over RDBMS storage. We'll cover them as they come up while discussing the mechanics of the schema declaration syntax.
+advanatges that CommandPost storage provides over RDBMS storage. We'll cover them as they come up while discussing the mechanics of the schema declaration syntax.
 
 First, a schema is nothing more than a list of fields, each of which has some properties. What better way, what more 'Ruby way' of accomplishing this than with a Hash? So then, a 'schema' is a Hash. Each key is a field name
 and the value of each field is another hash containing a varying number of keys (properties) and values (settings) for the field.
@@ -108,7 +105,7 @@ Field names are declared AS STRINGS and NOT symbols. Personally, I like the look
 
 So then, the first field is 'order_date' is a 'required' field. Hopefully that requires no further explanation. They type is 'Date'. That means that the value assigned to the order_date field MUST be an object whose class is Date.
 I've not yet given much thought about values that objects that descend from date or Strings that can cleanly be coerced into a Date. However, this segues into another point: unlike an RDBMS whose datatypes are fairly unintelligent
-(integers, decimals, strings, dates, etc), 4db can have types of ANY object... well, any JSON-friendly object such Hashes, Arrays or classes that inherit from them (1) . For example, consider that most venerable of all database
+(integers, decimals, strings, dates, etc), CommandPost can have types of ANY object... well, any JSON-friendly object such Hashes, Arrays or classes that inherit from them (1) . For example, consider that most venerable of all database
 fields, the Social Security Number. It turns out that not all 9-digit numbers issued by Uncle Sam are Social Security Numbers. 
 Some are called ITINs (Individual Taxpayer Identification Number) and are often issued to people arriving in the U.S. before they are issued an actual SSN. They may have an ITIN for years before receving an SSN.
 
@@ -142,7 +139,7 @@ You could now declare a schema field as follows:
 Returning to our purchase order example, we left off the :location keyword of 'order_date'.  order_date's location is :local. This is the default for all fields but we've spelled it out here. The only other acceptable
 value for :location is :remote. If :location is :remote, then :type must be set to the name of a class that includes Identity. Or, alternatively, the :type can be set to Array and the :of keyword must be set to 
 a class that includes Identity.  It's worth noting that if a field is set to an Identity object and :location is :remote, the entire content of that object is NOT stored in the database. Rather a small Hash structure called
-an 'AggregatePointer' is stored that. It is just a bit of data that says where to find the actual object in the database. However, you can easily tell 4db to return your object to you with all remote identity objects already
+an 'AggregatePointer' is stored that. It is just a bit of data that says where to find the actual object in the database. However, you can easily tell CommandPost to return your object to you with all remote identity objects already
 retrieved and populated. This is simply done by including the :autoload => true   otpion in your schema declaration.
 
 Moving on to the order_lines field, you can see that its type is 'Array' and the :of keyword has PurchaseOrderLines as its value. So then, this field is an Array of PurchaseOrderLine objects. The :location is set to :local.
@@ -203,9 +200,9 @@ Now to persist this thing we would say something like this:
   Here, we used the 'Command Pattern'. In some ways, it is a bit more code (at first), but, it's makes almost impossible to write an application without understanding each business case where data is created or changed,
   and then creating a "command" to carry it out.
 
-  At this point, 4db does not use messaging software to transport commands to command handlers. You may or may not wish to ever use messaging software. 
+  At this point, CommandPost does not use messaging software to transport commands to command handlers. You may or may not wish to ever use messaging software. 
 
-  Omitting for now the code inside of the the command, here's how we'd persist this purchase order to the 4db database:
+  Omitting for now the code inside of the the command, here's how we'd persist this purchase order to the CommandPost database:
   
 <pre><code>
 
