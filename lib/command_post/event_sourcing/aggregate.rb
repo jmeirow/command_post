@@ -3,9 +3,9 @@ require 'securerandom'
 require 'json'
 require 'sequel'
 
-require_relative '../db/connection.rb'
-require_relative '../identity/sequence_generator.rb'
-
+require_relative '../db/connection'
+require_relative '../identity/sequence_generator'
+require_relative '../util/hash_util'
 
 module CommandPost
 
@@ -19,13 +19,14 @@ module CommandPost
 
     
 
-    def self.replace object
+    def self.replace object, aggregate_lookup_value
+
+
       content = JSON.generate object
-    
       aggregate_id = object[:aggregate_info][:aggregate_id] 
       aggregate_type = object[:aggregate_info][:aggregate_type] 
       version = object[:aggregate_info][:version].to_i
-      aggregate_lookup_value =  object['aggregate_lookup_value'] 
+
 
       if (version) == 1
         @@prep_stmt_insert.call(:aggregate_id => aggregate_id, :aggregate_type => aggregate_type.to_s , :content => content, :aggregate_lookup_value => aggregate_lookup_value  ) 
@@ -41,7 +42,7 @@ module CommandPost
       $DB.fetch("SELECT * FROM aggregates WHERE aggregate_id = ?",  aggregate_id ) do |row|
         hash = JSON.parse(row[:content])
       end
-      aggregate_type.load_from_hash( aggregate_type, hash)
+      aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
     end
 
 
@@ -50,7 +51,7 @@ module CommandPost
       results = Array.new
       $DB.fetch("SELECT * FROM aggregates WHERE aggregate_type = ?", aggregate_type.to_s) do |row|
         hash =  JSON.parse(row[:content])
-        results << aggregate_type.load_from_hash( aggregate_type, hash)
+        results << aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
       end
       results
     end
@@ -73,7 +74,7 @@ module CommandPost
       if hash.nil? || hash == {}
         {}
       else
-        aggregate_type.load_from_hash( aggregate_type, hash)
+        aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
       end
     end
   end

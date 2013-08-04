@@ -1,4 +1,4 @@
-
+require_relative '../util/hash_util'
 
 module CommandPost
 
@@ -15,6 +15,7 @@ module CommandPost
       schema_fields.select {|key, value| value[:location] == :local && value[:type].superclass == Persistence }.keys
     end
 
+
     def populate_auto_load_fields 
       auto_load_fields.select {|x| @data.keys.include? x}.each do |field|
         if @data[field].class == Array
@@ -25,7 +26,7 @@ module CommandPost
               if pointer.respond_to? :aggregate_pointer
                 pointer = pointer.aggregate_pointer
               end
-              obj =  Aggregate.get_by_aggregate_id(Object.const_get(pointer['aggregate_type']), pointer['aggregate_id'])
+              obj =  Aggregate.get_by_aggregate_id(Object.const_get(pointer[:aggregate_type]), pointer[:aggregate_id])
               array_of_objects << obj
             end
             array_of_pointers.clear
@@ -33,10 +34,11 @@ module CommandPost
             @data[field] += array_of_objects
           end
         else
-          @data[field] = Aggregate.get_by_aggregate_id( schema_fields[field][:type], @data[field]['aggregate_id'])
+          @data[field] = Aggregate.get_by_aggregate_id( schema_fields[field][:type], @data[field][:aggregate_id])
         end
       end
     end
+
     
     def to_pretty_pp
       len = 0
@@ -55,10 +57,11 @@ module CommandPost
       result
     end
 
+
     def populate_local_persistent_objects
       local_peristent_fields.each do |field|
         klass = schema_fields[field][:type]
-        @data[field] = klass.load_from_hash klass, @data[field]
+        @data[field] = klass.load_from_hash klass, HashUtil.symbolize_keys(@data[field])
         @data[field].populate_local_persitent_objects
       end
     end  

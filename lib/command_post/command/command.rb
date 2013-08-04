@@ -1,6 +1,7 @@
 require 'pp'
-require_relative '../lib/string_util.rb'
-require_relative '../event_sourcing/aggregate_event.rb'
+require File.expand_path(File.dirname(__FILE__) + '/../util/string_util')
+require File.expand_path(File.dirname(__FILE__) + '/../identity/identity')
+require File.expand_path(File.dirname(__FILE__) + '/../event_sourcing/aggregate_event')
 
 
 
@@ -313,9 +314,6 @@ module CommandPost
           object.send("#{field.to_s}=".to_sym, params[field])
         end
       end
-
-
-      object.set_aggregate_lookup_value
 
 
       if params[:aggregate_id]

@@ -1,5 +1,6 @@
 require 'pp'
-
+require 'pry'
+require 'pry-debugger'
 
   module SchemaValidation
 
@@ -20,15 +21,31 @@ require 'pp'
 
     def self.validate_keywords field_name, field_info 
       errors = Array.new 
-      keywords = [:required, :type, :of, :location, :auto_load, :allowed_values, :upcase]
-      field_info.keys.each do |key| 
-        if keywords.include?(key)==false 
+      
+      if field_name == :lookup
+        errors = self.validate_lookup field_name, field_info
+      else 
+        keywords = [:required, :type, :of, :location, :auto_load, :allowed_values, :upcase ]
+        field_info.keys.each do |key| 
+          if keywords.include?(key)==false 
             errors << "Field Name: #{field_name} :  #{key} is an invalid keyword." 
+          end
         end
       end
       errors 
     end
     
+    def self.validate_lookup field_name, field_info
+      errors = Array.new 
+      keywords = [:use ]
+      field_info.keys.each do |key| 
+        if keywords.include?(key)==false 
+          errors << "Lookup Field has invalid keyword '#{key}'." 
+        end
+      end
+      errors 
+    end 
+
 
     def self.validate_allowed_values field_name, field_info 
       if field_info[:allowed_values].class != Array

@@ -1,8 +1,5 @@
-require 'date'
-require 'minitest/autorun'
-require 'minitest/spec'
-require File.expand_path(File.dirname(__FILE__) + '/../persistence')
-require File.expand_path(File.dirname(__FILE__) + '/../../identity/identity')
+require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
+
 
 
 describe CommandPost::Persistence do 

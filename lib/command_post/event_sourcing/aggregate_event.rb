@@ -18,7 +18,7 @@ module CommandPost
     @@required_by_txn = [ "aggregate_type", "aggregate_id", "event_description", "content", "transaction_id", "transacted" ]
 
     def initialize
-      #@transaction_id = SequenceGenerator.transaction_id
+      @transaction_id = SequenceGenerator.transaction_id
       @transacted = Time.now 
       @object = @changes = nil
     end
@@ -27,6 +27,7 @@ module CommandPost
       if changes
         save_event changes
       elsif object
+        @aggregate_lookup_value = object.aggregate_lookup_value
         save_event object.to_h
       else
         raise 'Event has no state to publish.'
@@ -72,7 +73,7 @@ module CommandPost
 
       json = JSON.generate(change)
       @@prepared_statement.call(
-                            :aggregate_type => @aggregate_type, 
+                            :aggregate_type => @aggregate_type.to_s, 
                             :aggregate_id => @aggregate_id,
                             :content => json, 
                             :transaction_id => @transaction_id, 
@@ -80,7 +81,7 @@ module CommandPost
                             :event_description => @event_description,
                             :user_id => @user_id
                               )
-      Aggregate.replace  get_current_object
+      Aggregate.replace  get_current_object, @aggregate_lookup_value
     end
 
 
@@ -90,14 +91,15 @@ module CommandPost
       version = 0
       accumulated_object = Hash.new 
       $DB.fetch("SELECT * FROM aggregate_events WHERE aggregate_id = ? order by transacted", @aggregate_id) do |row|
-        accumulated_object.merge!(JSON.parse(row[:content]))
+        accumulated_object.merge!(HashUtil.symbolize_keys(JSON.parse(row[:content])))
         aggregate_details = Hash.new
-        aggregate_details["aggregate_type"] = row[:aggregate_type]
-        aggregate_details["aggregate_id"] = row[:aggregate_id]
-        aggregate_details["version"] = "#{version += 1}"  
-        aggregate_details["most_recent_transaction"] = row[:transaction_id]
-        accumulated_object["aggregate_info"] =  aggregate_details
+        aggregate_details[:aggregate_type] = row[:aggregate_type]
+        aggregate_details[:aggregate_id] = row[:aggregate_id]
+        aggregate_details[:version] = "#{version += 1}"  
+        aggregate_details[:most_recent_transaction] = row[:transaction_id]
+        accumulated_object[:aggregate_info] =  aggregate_details
       end
+
       accumulated_object 
     end
   end

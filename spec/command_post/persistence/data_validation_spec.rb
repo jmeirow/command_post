@@ -1,15 +1,4 @@
-require 'date'
-require 'minitest/autorun'
-require 'minitest/spec'
-require File.expand_path(File.dirname(__FILE__) + '/../persistence')
-require File.expand_path(File.dirname(__FILE__) + '/../data_validation')
-require File.expand_path(File.dirname(__FILE__) + '/../../identity/identity')
-
-
-
-
-
-
+require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
 
 class SomeClass  < CommandPost::Persistence 
   include CommandPost::Identity
