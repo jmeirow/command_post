@@ -28,8 +28,8 @@ describe CommandPost::Identity do
 
       params = Hash.new  # like a web request... 
 
-      params['first_name']  = 'Joe'                                             #hash key is a string to mimic a web post/put
-      params['last_name']   = 'Meirow'                                          #hash key is a string to mimic a web post/put
+      params['first_name']  = 'John'                                             #hash key is a string to mimic a web post/put
+      params['last_name']   = 'Doe'                                          #hash key is a string to mimic a web post/put
       params['ssn']         = "%09d" %  CommandPost::SequenceGenerator.misc     #hash key is a string to mimic a web post/put
 
       object = Test001Person.load_from_hash Test001Person, params
