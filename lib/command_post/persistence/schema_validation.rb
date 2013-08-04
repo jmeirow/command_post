@@ -1,6 +1,4 @@
 require 'pp'
-require 'pry'
-require 'pry-debugger'
 
   module SchemaValidation
 

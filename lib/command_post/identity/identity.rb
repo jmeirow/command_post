@@ -1,7 +1,3 @@
-require 'pry'
-
-require 'pry_debug'
-
 
 module CommandPost
 
@@ -10,9 +6,8 @@ module CommandPost
 
  
     def aggregate_lookup_value
-      puts "DEBUG:   dump of self =   #{pp self.to_h}  #{'=' * 80}"
       field = (schema_fields[:lookup][:use])
-      self.send field.to_sym
+      (self.send field.to_sym).to_s
     end
 
     def aggregate_id 
@@ -37,7 +32,7 @@ module CommandPost
     def checksum  
       data = Array.new
       @data.keys.select {|x| x != :aggregate_info}.each {|x| data <<  @data[x] }
-      Persistence.generate_checksum(data.join())
+      Identity.generate_checksum(data.join())
     end
     
 

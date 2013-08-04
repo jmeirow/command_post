@@ -6,8 +6,6 @@ require_relative './schema_validation.rb'
 require_relative './data_validation.rb'
 require_relative './auto_load.rb'
 require_relative '../command/command.rb'
-require 'pry'
-require 'pry-debugger'
 
 module CommandPost
 
@@ -33,9 +31,7 @@ module CommandPost
 
 
     def set_data data_hash
-      puts "data hash in set_data #{'=' * 80}"
       @data = data_hash
-      pp @data
       if @aggregate_info_set == false 
         @aggregate_info_set = true
       end
@@ -65,10 +61,12 @@ module CommandPost
 
       name = nm.to_s
       if name.end_with?('=') == false
-        if @data.keys.include? name
-            get_data name nm 
+
+
+        if @data.keys.include? nm
+            get_data nm
         else 
-          if schema_fields.keys.include? name 
+          if schema_fields.keys.include? nm 
             return nil
           else
             begin
@@ -79,12 +77,8 @@ module CommandPost
           end
         end
       else
-        field_name = name.gsub(/\=/,'')
-        if args.first.kind_of?Persistence 
-          @data[field_name.to_sym] = args.first 
-        else
-          @data[field_name.to_sym] = args.first
-        end
+        nm = name.gsub(/\=/,'').to_sym
+        @data[nm] = args.first
       end
     end
 

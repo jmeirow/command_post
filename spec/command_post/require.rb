@@ -6,3 +6,4 @@ require File.expand_path(File.dirname(__FILE__) + '/../../lib/command_post/persi
 require File.expand_path(File.dirname(__FILE__) + '/../../lib/command_post/identity/identity')
 require File.expand_path(File.dirname(__FILE__) + '/../../lib/command_post/event_sourcing/aggregate')
 require File.expand_path(File.dirname(__FILE__) + '/../../lib/command_post/event_sourcing/aggregate_event')
+require File.expand_path(File.dirname(__FILE__) + '/../../lib/command_post/identity/sequence_generator')
