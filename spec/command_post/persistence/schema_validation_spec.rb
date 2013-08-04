@@ -2,7 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
 
 
 
-describe CommandPost::Persistence do 
+  describe CommandPost::Persistence do 
 
     it 'should complain if the schema is bad' do
 
@@ -25,8 +25,13 @@ describe CommandPost::Persistence do
     end
 
 
+
+
+
+
+
     it 'should raise an error when a instance of Symbol is not used to identify a field.' do 
- 
+
       class SomeClass02 < CommandPost::Persistence 
         include CommandPost::Identity
 
@@ -46,8 +51,14 @@ describe CommandPost::Persistence do
     end
 
 
+
+
+
+
+
+
     it 'should raise an error when a keyword requires a value of true or false but gets neither.'  do 
- 
+
       class SomeClass03 < CommandPost::Persistence 
         include CommandPost::Identity
 
@@ -66,8 +77,12 @@ describe CommandPost::Persistence do
     end
 
 
+
+
+
+
     it 'should raise an error when a :location gets neither :remote or :local for a value.'  do 
- 
+
       class SomeClass04 < CommandPost::Persistence 
         include CommandPost::Identity
 
@@ -81,16 +96,18 @@ describe CommandPost::Persistence do
           fields[ :last_name         ] = { :required => true,        :type => String,    :location => :local  }  
           fields 
         end
-
-
       end
 
       assert_raises(ArgumentError)  { some_class = SomeClass04.new } 
     end
 
 
+
+
+
+
     it 'should raise an error when a :auto_load is true but type is not an CommandPost::Identity class.'  do 
- 
+
       class SomeClass05 < CommandPost::Persistence 
         include CommandPost::Identity
 
@@ -104,16 +121,18 @@ describe CommandPost::Persistence do
           fields[ :last_name         ] = { :required => true,       :type => String,    :location => :local  } 
           fields 
         end
-
-
       end
 
       assert_raises(ArgumentError)  { some_class = SomeClass05.new } 
     end
 
 
+
+
+
+
     it 'should raise an error when a :auto_load is true, :type is Array and :of is not supplied.'  do 
- 
+
       class SomeClass06 < CommandPost::Persistence 
         include CommandPost::Identity
 
@@ -132,14 +151,14 @@ describe CommandPost::Persistence do
       assert_raises(ArgumentError)  { some_class = SomeClass06.new } 
     end
 
- 
+
 
 
 
 
 
     it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but its value is not an CommandPost::Identity class.'  do 
- 
+
       class SomeClass06 < CommandPost::Persistence 
         include CommandPost::Identity
 
@@ -165,7 +184,7 @@ describe CommandPost::Persistence do
 
 
     it 'should raise an error when a :auto_load is true, :type is Array, :of is supplied but it is a CommandPost::IdentityPersistent class, not an CommandPost::Identity class.'  do 
- 
+
 
       class Helper07 < CommandPost::Persistence 
       end 
@@ -190,12 +209,12 @@ describe CommandPost::Persistence do
     end
 
 
- 
+
 
 
 
     it 'should raise an error when a :auto_load is true,  its value is Persistent, but not an CommandPost::Identity class.'  do 
- 
+
 
       class Helper08 < CommandPost::Persistence 
       end 
@@ -216,14 +235,13 @@ describe CommandPost::Persistence do
       end
 
       assert_raises(ArgumentError)  { some_class = SomeClass08.new } 
-
     end
 
 
 
 
     it 'should raise an error when an CommandPost::Identity class is the :type and location is :local.'  do 
- 
+
 
       class Helper09 < CommandPost::Persistence
         include CommandPost::Identity 
@@ -245,12 +263,9 @@ describe CommandPost::Persistence do
       end
 
       assert_raises(ArgumentError)  { some_class = SomeClass09.new } 
-
     end
 
-
-
-end
+  end
 
 
  
