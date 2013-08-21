@@ -55,8 +55,6 @@ require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
 
 
 
-
-
     it 'should raise an error when a keyword requires a value of true or false but gets neither.'  do 
 
       class SomeClass03 < CommandPost::Persistence 

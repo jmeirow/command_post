@@ -1,47 +1,22 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    coderay (1.0.9)
-    columnize (0.3.6)
-    debugger (1.6.1)
-      columnize (>= 0.3.1)
-      debugger-linecache (~> 1.2.0)
-      debugger-ruby_core_source (~> 1.2.3)
-    debugger-linecache (1.2.0)
-    debugger-ruby_core_source (1.2.3)
     ffi (1.9.0)
     ffi (1.9.0-x86-mingw32)
     listen (1.2.2)
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
       rb-kqueue (>= 0.2)
-    method_source (0.8.1)
     pg (0.16.0)
     pg (0.16.0-x86-mingw32)
-    pry (0.9.12.2)
-      coderay (~> 1.0.5)
-      method_source (~> 0.8)
-      slop (~> 3.4)
-    pry (0.9.12.2-x86-mingw32)
-      coderay (~> 1.0.5)
-      method_source (~> 0.8)
-      slop (~> 3.4)
-      win32console (~> 1.3)
-    pry-debugger (0.2.2)
-      debugger (~> 1.3)
-      pry (~> 0.9.10)
-    pry_debug (0.1.0)
-      pry (~> 0.9.0)
     rb-fsevent (0.9.3)
     rb-inotify (0.9.0)
       ffi (>= 0.5.0)
     rb-kqueue (0.2.0)
       ffi (>= 0.5.0)
     sequel (4.0.0)
-    slop (3.4.5)
     starting_blocks (0.0.31)
       listen (>= 1.0)
-    win32console (1.3.2-x86-mingw32)
 
 PLATFORMS
   ruby
@@ -49,8 +24,5 @@ PLATFORMS
 
 DEPENDENCIES
   pg
-  pry
-  pry-debugger
-  pry_debug
   sequel
   starting_blocks
