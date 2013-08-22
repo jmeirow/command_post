@@ -236,10 +236,7 @@ Now to persist this thing we would say something like this:
 
 
 
-
-That's all for today. I'll write more soon. I wrote this in one setting so I apologize for any typos. 
-
-More soon. I hope to release this as open source on GitHub sometime before August, 2013.
+Download the gem from RubyGems at: https://rubygems.org/gems/command_post
 
 
 
