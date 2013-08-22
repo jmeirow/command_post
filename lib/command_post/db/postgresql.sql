@@ -39,7 +39,7 @@ create index aggregate_lookup_idx on aggregates(aggregate_lookup_value);
 create table aggregate_index (
 aggregate_id    		bigint not null,
 index_field             varchar(100) not null,
-index_value      		varchar(100) not null,
+index_value      		varchar(100) not null
 )  ; 
 
 create index aggregate_index on aggregates(aggregate_lookup_value);
