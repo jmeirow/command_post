@@ -15,6 +15,9 @@ class Test003Person < CommandPost::Persistence
     fields[  :lookup            ] = { :use => :aggregate_id }
     fields 
   end 
+  def self.indexes
+    []
+  end
 end
 
 

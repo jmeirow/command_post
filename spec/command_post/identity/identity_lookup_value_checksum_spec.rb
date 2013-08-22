@@ -18,6 +18,9 @@ class Test002Person < CommandPost::Persistence
     fields[  :lookup            ] = { :use => :checksum }
     fields 
   end 
+  def self.indexes
+    []
+  end
 end
 
 

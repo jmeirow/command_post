@@ -18,6 +18,9 @@ class Test001Person < CommandPost::Persistence
     fields[  :lookup            ] = { :use => :ssn }
     fields 
   end 
+  def self.indexes
+    []
+  end
 end
 
 

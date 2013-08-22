@@ -7,6 +7,9 @@ require_relative './data_validation.rb'
 require_relative './auto_load.rb'
 require_relative '../command/command.rb'
 
+require 'pry'
+require 'pry-debugger'
+
 module CommandPost
 
   class Persistence 
@@ -17,9 +20,11 @@ module CommandPost
     def initialize 
 
       @@fields ||= Hash.new
+      @@indexes ||= Hash.new
       @aggregate_info_set = false
       @data = Hash.new
       self.class.init_schema self.class.schema
+      self.class.init_indexes self.class.indexes
       Command.auto_generate self.class
     end
 
@@ -28,6 +33,11 @@ module CommandPost
       
       @@fields[self.class]
     end
+
+    def index_fields 
+      @@indexes[self.class]
+    end
+
 
 
     def set_data data_hash
@@ -57,12 +67,55 @@ module CommandPost
     end
 
 
+    def self.stringify_values values
+
+      values.collect{|x| "'#{x}'"}.join(',')
+
+    end
+
+    def self.get_index_sql  name, values
+        
+      "SELECT  aggregate_id FROM    aggregate_indexes WHERE   index_field = '#{name}' AND     index_value in (#{self.stringify_values(values)}) "
+    end
+
+
+    def self.get_ids_for_index index_name, *args
+
+      values = args[0][0]
+      name = "#{self.to_s}.#{index_name.to_s.sub(/_in$/,'')}"
+      sql = get_index_sql name, values
+      results = Array.new 
+      $DB.fetch(sql) do |row|
+        results << row[:aggregate_id]
+      end
+
+      results
+
+    end
+
+
+    def self.method_missing nm, *args , &block
+      name = nm.to_s
+      search_index = name.gsub(/_in/,'').to_sym
+      if (name.end_with?('_in') && self.indexes.include?(search_index))
+        ids =  self.get_ids_for_index nm, args
+        return ids
+      else 
+        begin
+          super
+        rescue Exception => e
+           raise e.message
+        end
+      end
+    end
+
+
     def method_missing(nm, *args)
 
       name = nm.to_s
+      error_msg = "SCHEMA ERROR:  #{name} is not a defined attribute of or index on '#{self.class.to_s}'"
+      
       if name.end_with?('=') == false
-
-
         if @data.keys.include? nm
             get_data nm
         else 
@@ -71,13 +124,14 @@ module CommandPost
           else
             begin
               super
-            rescue 
-              puts "#{nm} is not a defined field in #{self}"
+            rescue Exception => e
+              raise error_msg
             end
           end
         end
       else
         nm = name.gsub(/\=/,'').to_sym
+        raise  error_msg unless schema_fields.keys.include?(nm)  
         @data[nm] = args.first
       end
     end
@@ -109,6 +163,16 @@ module CommandPost
       @@fields[self] ||= fields 
     end
 
+    def self.init_indexes index_fields
+      @@indexes ||= Hash.new
+      # index_error_messages =  IndexValidation.validate_indexes(index_fields)
+      # if index_error_messages.length > 0
+      #   raise ArgumentError, "The declared indexes for #{self} had the following error(s): #{pp index_error_messages}"
+      # end
+      @@indexes[self] ||= index_fields 
+    end
+
+
  
     def self.load_from_hash the_class, string_hash
 
@@ -127,9 +191,9 @@ module CommandPost
       object.set_data  data_hash
       object.populate_auto_load_fields #unless self.bypass_auto_load == true
       object.populate_local_persistent_objects
-      if (the_class.included_modules.include?(CommandPost::Identity) == true)
-        object.set_aggregate_lookup_value
-      end
+      # if (the_class.included_modules.include?(CommandPost::Identity) == true)
+      #   object.set_aggregate_lookup_value
+      # end
       object
     end
 

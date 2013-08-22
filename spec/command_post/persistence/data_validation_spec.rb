@@ -15,6 +15,9 @@ class SomeClass  < CommandPost::Persistence
     fields[ :favorite_number   ] = { :required => true,       :type => Fixnum,    :location => :local  } 
     fields 
   end
+  def self.indexes
+    []
+  end
 end
 
 

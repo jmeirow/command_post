@@ -19,6 +19,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
           fields[ :last_name         ] = { :required => true,       :type => String,    :location => :local  } 
           fields 
         end
+        def self.indexes
+          []
+        end
       end
       some_class = SomeClass01.new 
       some_class.class.must_be_same_as SomeClass01
@@ -45,6 +48,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
           fields[ 'last_name'         ] = { :required => true,       :type => String,    :location => :local  } 
           fields 
         end 
+        def self.indexes
+          []
+        end
       end
 
       assert_raises(ArgumentError) { some_class = SomeClass02.new } 
@@ -94,6 +100,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
           fields[ :last_name         ] = { :required => true,        :type => String,    :location => :local  }  
           fields 
         end
+        def self.indexes
+          []
+        end
       end
 
       assert_raises(ArgumentError)  { some_class = SomeClass04.new } 
@@ -119,6 +128,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
           fields[ :last_name         ] = { :required => true,       :type => String,    :location => :local  } 
           fields 
         end
+        def self.indexes
+          []
+        end
       end
 
       assert_raises(ArgumentError)  { some_class = SomeClass05.new } 
@@ -143,6 +155,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
           fields[ :first_name        ] = { :required => true,        :type => Array,     :location => :remote,   :auto_load => true  } 
           fields[ :last_name         ] = { :required => true,        :type => String,    :location => :local  } 
           fields 
+        end
+        def self.indexes
+          []
         end
       end
 
