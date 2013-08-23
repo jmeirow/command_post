@@ -104,7 +104,8 @@ module CommandPost
         begin
           super
         rescue Exception => e
-           raise e.message
+          puts "DEBUG:   PRINTING BACKTRACE  #{'=' * 80}"
+           puts e.backtrace
         end
       end
     end
