@@ -1,48 +1,49 @@
---drop table aggregate_events;
---drop table aggregates;
+--DROP TABLE AGGREGATE_EVENTS;
+--DROP TABLE AGGREGATES;
 
 
 
-create table aggregate_events (
+CREATE TABLE aggregate_events (
 
-    transaction_id      bigint primary key,  
-    aggregate_id        bigint,  
-    aggregate_type      varchar(100),
-    event_description   text,
-    content             text,
-    call_stack          text, 
-    user_id         	varchar(100) not null,
-    transacted          timestamp
+    transaction_id      BIGINT PRIMARY KEY,  
+    aggregate_id        BIGINT,  
+    aggregate_type      VARCHAR(100),
+    event_description   TEXT,
+    content             TEXT,
+    call_stack          TEXT, 
+    user_id         	VARCHAR(100) NOT NULL,
+    transacted          TIMESTAMP
 
    )  ;
 
-create index aggregate_id_idx on aggregate_events(aggregate_id,aggregate_type);
+CREATE INDEX aggregate_id_idx ON aggregate_events(aggregate_id,aggregate_type);
 
 
 
 
   
-create table aggregates (
+CREATE TABLE aggregates (
 
-aggregate_id    		bigint not null primary key,
-aggregate_lookup_value  varchar(100) not null,
-aggregate_type    		varchar(100) not null,
-content         		text not null
+aggregate_id    		BIGINT NOT NULL PRIMARY KEY,
+aggregate_lookup_value  VARCHAR(100) NOT NULL,
+aggregate_type    		VARCHAR(100) NOT NULL,
+content         		TEXT NOT NULL
 
 )  ; 
 
-create index aggregate_lookup_idx on aggregates(aggregate_lookup_value);
+CREATE INDEX aggregate_lookup_idx ON aggregates(aggregate_lookup_value);
 
 
 
   
-create table aggregate_index (
-aggregate_id    		bigint not null,
-index_field             varchar(100) not null,
-index_value      		varchar(100) not null
+CREATE TABLE aggregate_indexes (
+aggregate_id    		BIGINT NOT NULL,
+index_field             VARCHAR(100) NOT NULL,
+index_value      		VARCHAR(100) NOT NULL,
+PRIMARY KEY             (aggregate_id,index_field)
 )  ; 
 
-create index aggregate_index on aggregates(aggregate_lookup_value);
+
   
 CREATE SEQUENCE aggregate START 1;
 
