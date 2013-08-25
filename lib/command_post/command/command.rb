@@ -1,7 +1,4 @@
-require 'pp'
-require File.expand_path(File.dirname(__FILE__) + '/../util/string_util')
-require File.expand_path(File.dirname(__FILE__) + '/../identity/identity')
-require File.expand_path(File.dirname(__FILE__) + '/../event_sourcing/aggregate_event')
+
 
 
 

@@ -1,4 +1,5 @@
-require 'pp'
+
+module CommandPost
 
   module SchemaValidation
 
@@ -135,3 +136,4 @@ require 'pp'
 
 
   end
+end

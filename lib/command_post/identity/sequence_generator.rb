@@ -2,8 +2,6 @@ require 'securerandom'
 require 'sequel'
 
 
-require_relative '../db/connection.rb'
-
 
 module CommandPost
 

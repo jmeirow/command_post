@@ -1,14 +1,7 @@
+require_relative './schema_validation'
+require_relative './data_validation'
+require_relative './auto_load'
 
-require_relative '../event_sourcing/aggregate.rb'
-require_relative '../event_sourcing/aggregate_event.rb'
-require_relative '../persistence/persistence.rb'
-require_relative './schema_validation.rb'
-require_relative './data_validation.rb'
-require_relative './auto_load.rb'
-require_relative '../command/command.rb'
-
-require 'pry'
-require 'pry-debugger'
 
 module CommandPost
 

@@ -1,6 +1,4 @@
-require File.expand_path(File.dirname(__FILE__) + '/../../command_post/require')
-
-
+require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
   describe CommandPost::Persistence do 
 

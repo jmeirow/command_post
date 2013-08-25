@@ -1,6 +1,4 @@
 
-
-
 module CommandPost
 
   module DataValidation

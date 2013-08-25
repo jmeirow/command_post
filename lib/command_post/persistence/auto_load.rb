@@ -1,4 +1,3 @@
-require_relative '../util/hash_util'
 
 module CommandPost
 

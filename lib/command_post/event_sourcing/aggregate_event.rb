@@ -1,4 +1,3 @@
-require_relative './aggregate.rb'
 
 
 module CommandPost

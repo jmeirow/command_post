@@ -3,10 +3,6 @@ require 'securerandom'
 require 'json'
 require 'sequel'
 
-require_relative '../db/connection'
-require_relative '../identity/sequence_generator'
-require_relative '../util/hash_util'
-
 module CommandPost
 
 
