@@ -39,7 +39,9 @@ CREATE INDEX aggregate_lookup_idx ON aggregates(aggregate_lookup_value);
 CREATE TABLE aggregate_indexes (
 aggregate_id    		BIGINT NOT NULL,
 index_field             VARCHAR(100) NOT NULL,
-index_value      		VARCHAR(100) NOT NULL,
+index_value_text		TEXT,
+index_value_integer     INTEGER,
+index_value_decimal     DECIMAL(20,4),
 PRIMARY KEY             (aggregate_id,index_field)
 )  ; 
 

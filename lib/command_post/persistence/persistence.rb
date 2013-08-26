@@ -2,6 +2,9 @@ require_relative './schema_validation'
 require_relative './data_validation'
 require_relative './auto_load'
 
+require 'pry'
+require 'pry-debugger'
+
 
 module CommandPost
 
@@ -66,34 +69,50 @@ module CommandPost
 
     end
 
-    def self.get_index_sql  name, values
-        
-      "SELECT  aggregate_id FROM    aggregate_indexes WHERE   index_field = '#{name}' AND     index_value in (#{self.stringify_values(values)}) "
+    def self.listify(values)
+      return values.collect { |x| "'#{x}'"}.join(',') if values.first.is_a? String
+      values.collect { |x|  "#{x}"  }.join(',')
     end
 
 
-    def self.get_ids_for_index index_name, *args
+    def self.get_sql_for_in  name, values
+      "SELECT  aggregate_id FROM    aggregate_indexes WHERE   index_field = '#{name}' AND   #{self.compute_index_column_name(values.first)} in (#{self.listify(values)}) "
+    end
 
-      values = args[0][0]
+
+    def self.get_sql_for_is  name , value
+      "SELECT  aggregate_id FROM    aggregate_indexes WHERE   index_field = '#{name}' AND  #{self.compute_index_column_name(value)} = ? "
+    end
+
+
+
+    def self.compute_index_column_name(field)
+      return 'INDEX_VALUE_INTEGER' if field.is_a? Fixnum
+      return 'INDEX_VALUE_DECIMAL' if field.is_a? BigDecimal
+      'INDEX_VALUE_TEXT'
+    end
+
+
+    def self.get_ids_for_in index_name, *args
       name = "#{self.to_s}.#{index_name.to_s.sub(/_in$/,'')}"
-      sql = get_index_sql name, values
-      results = Array.new 
-      $DB.fetch(sql) do |row|
-        results << row[:aggregate_id]
-      end
+      $DB.fetch(get_sql_for_in name, args.last).collect { |row|  row[:aggregate_id] }
+    end
 
-      results
-
+    def self.get_ids_for_is index_name, value
+      name = "#{self.to_s}.#{index_name.to_s.sub(/_is$/,'')}"
+      $DB.fetch(get_sql_for_is(name,value),value.to_s).collect { |row|  row[:aggregate_id] }
     end
 
 
     def self.method_missing nm, *args , &block
       name = nm.to_s
-      search_index = name.gsub(/_in/,'').to_sym
-      if (name.end_with?('_in') && self.indexes.include?(search_index))
-        ids =  self.get_ids_for_index nm, args
+      if (name.end_with?('_in') && self.indexes.include?(name.gsub(/_in/,'').to_sym))
+        ids =  self.get_ids_for_in nm, args
         return ids
-      else 
+      elsif (name.end_with?('_is') && self.indexes.include?(name.gsub(/_is/,'').to_sym))
+        ids =  self.get_ids_for_is nm, args.last
+        return ids
+      else
         begin
           super
         rescue Exception => e
