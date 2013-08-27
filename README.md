@@ -43,10 +43,10 @@ First, the Domain-Driven-Design-inspired approach
 
 <pre><code>
 
-# declare class, inherit from Persistence
+ 
 
 
-class PurachaseOrderHeader < Persistence
+class PurachaseOrderHeader &lt; Persistence
   
   include Identity
 
@@ -68,7 +68,7 @@ class PurachaseOrderHeader < Persistence
 
 end
 
-class PurachaseOrderLine < Persistence
+class PurachaseOrderLine &lt; Persistence
   def initialize
     super
     fields = Hash.new
