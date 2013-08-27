@@ -11,7 +11,7 @@ CommandPost is a library that facilitates the retrieval and storage of objects. 
 *  A base class (Persistence) which encapsulates a Hash so as to allow dot notation access ( myobject.myproperty instead of myobject['myproperty']) as well as computational methods on the class.
 *  A schema declaration syntax which insures only valid objects are saved to the database 
 *  A module (Identity) the provides an identity to the object so that it may be persisted and retrieved later by its 'aggregate_id'.
-*  A fully-integrated 'at the core' event sourcing mechanism. Objects are not saved to the database until their 'change events' are first recorded to an event store. A single table (aggregate_events) holds every event 
+*  A fully-integrated 'at the core' event-sourcing mechanism. Objects are not saved to the database until their 'change events' are first recorded to an event store. A single table (aggregate_events) holds every event 
    that ever occurred to every object. It is relatively easy to picture the entire system as it appeared at a point in time. This will be even easier in future versions of CommandPost.
 *  Say goodbye to database migrations. Two tables store all your objects. Development cycles become more nimble without the "friction" of keeping changes consistent between the code and a database. Simply add a new
    'field' to your class and it's done.
