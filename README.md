@@ -50,16 +50,18 @@ class PurachaseOrderHeader &lt; Persistence
   
   include Identity
 
-  def initialize
-    super
+   def self.schema
     fields = Hash.new
-    fields[ 'order_date'   ] = { :required => true,       :type => Date,                              :location => :local                       } 
-    fields[ 'order_number  ] = { :required => true,       :type => String                             :location => :local                       } 
-    fields[ 'customer'     ] = { :required => true,       :type => Customer,                          :location => :remote, :auto_load => true  } 
-    fields[ 'order_total'  ] = { :required => true,       :type => Money,                             :location => :local                       } 
-    fields[ 'order_status' ] = { :required => true,       :type => String,                            :location => :local                       } 
-    fields[ 'order_lines  '] = { :required => true,       :type => Array,  :of => PurchaseOrderLine,  :location => :local                       } 
-    Address.init_schema fields 
+    fields[ 'order_date'      ] = { :required => true,       :type => Date,                              :location => :local                       } 
+    fields[ 'order_number     ] = { :required => true,       :type => String                             :location => :local                       } 
+    fields[ 'customer'        ] = { :required => true,       :type => Customer,                          :location => :remote, :auto_load => true  } 
+    fields[ 'order_total'     ] = { :required => true,       :type => Money,                             :location => :local                       } 
+    fields[ 'order_status'    ] = { :required => true,       :type => String,                            :location => :local                       } 
+    fields[ 'order_lines'     ] = { :required => true,       :type => Array,  :of => PurchaseOrderLine,  :location => :local                       } 
+    fields
+  end
+  def self.indexes
+   [:order_status]
   end
 
   def set_aggregate_lookup_value 
@@ -69,15 +71,16 @@ class PurachaseOrderHeader &lt; Persistence
 end
 
 class PurachaseOrderLine &lt; Persistence
-  def initialize
-    super
+   
+  def self.schema
     fields = Hash.new
     fields[ 'header '          ] = { :required => true,       :type => PurachaseOrderHeader,              :location => :remote, :auto_load => true  }  
     fields[ 'product'          ] = { :required => true,       :type => Product,                           :location => :remote, :auto_load => true   }  
     fields[ 'finalized_price'  ] = { :required => true,       :type => Money,                             :location => :local                        } 
     fields[ 'quantity'         ] = { :required => true,       :type => Fixnum,                            :location => :local                        } 
-    Address.init_schema fields 
+    fields 
   end
+ 
 
   def extended_price
     
