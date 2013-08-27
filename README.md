@@ -43,6 +43,9 @@ First, the Domain-Driven-Design-inspired approach
 
 <pre><code>
 
+# declare class, inherit from Persistence
+
+
 class PurachaseOrderHeader < Persistence
   
   include Identity
