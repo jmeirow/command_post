@@ -195,7 +195,7 @@ Now to persist this thing we would say something like this:
   hdr.save
 </code></pre>
 
-  We don't do that here. Mutating data without caputing WHY it changed is root of all evil.
+  We don't do that here. Mutating data without capturing WHY it changed is the root of all evil.
 
   Here, we used the 'Command Pattern'. In some ways, it is a bit more code (at first), but, it's makes almost impossible to write an application without understanding each business case where data is created or changed,
   and then creating a "command" to carry it out.
