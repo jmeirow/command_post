@@ -11,9 +11,9 @@ CommandPost is a library that facilitates the retrieval and storage of objects. 
 *  A base class (Persistence) which encapsulates a Hash so as to allow dot notation access ( myobject.myproperty instead of myobject['myproperty']) as well as computational methods on the class.
 *  A schema declaration syntax which insures only valid objects are saved to the database 
 *  A module (Identity) the provides an identity to the object so that it may be persisted and retrieved later by its 'aggregate_id'.
-*  A fully-integrated 'at the core' event sourcing mechanism. Objects are not saved to the database until their 'change events' are first recorded to an event store. A single table (aggregate_events) holds every event 
+*  A fully-integrated 'at the core' event-sourcing mechanism. Objects are not saved to the database until their 'change events' are first recorded to an event store. A single table (aggregate_events) holds every event 
    that ever occurred to every object. It is relatively easy to picture the entire system as it appeared at a point in time. This will be even easier in future versions of CommandPost.
-*  Say goodbye to database migrations. Two tables store all your objects. Development cycles become more nimble without the "friction" of keeping changes consistent between the code and a database. Simply add a new
+*  Say goodbye to database migrations. Three tables store all your objects. Development cycles become more nimble without the "friction" of keeping changes consistent between the code and a database. Simply add a new
    'field' to your class and it's done.
 *  Retrieves fully populated domain objects from the database. Application code does not own the step of wrangling hash-data into a business object. CommandPost does it for you. In fact, it's through your domain object declaration
    that CommandPost even knows how to populate the hashes that eventually stored as JSON.
@@ -25,15 +25,15 @@ A word about Persitence vs Identity.
 * A class that ONLY inherits from Persistence, but does not include the Identity module *CAN* be saved to the database but ONLY as the property of another object which must also be an Identity object (includes the Identity module) or eventually reaches up to an Identity object
 
 
-EXAMPLE: An example of Identity as contrasted against Persistence.
+EXAMPLE: An example of Identity as contrasted with Persistence.
 
-Consider a purchase order. It "header" information about the P.O. itself and it has many P.O. "lines".
+Consider a purchase order. It has information that applies to the PO as a whole and it also has some number of purchase order lines.
 
 In a traditional RDBMS, this scenario is almost always modeled as two tables:  A po_header table and a po_lines table.  In this case, both parts of the PO become unqiuely identifiable, individually retrievable entities by virtue of being rows on a table with po_lines most likely having a surrogate key that is an IDENTITY column.
 
-In reality though, as Domain Driven Design points out, a purchase order line typically has no meaning, no value, unless viewed in the context of the P.O. as a whole. One *possible* way of modelling that is more in keeping with DDD is to model the P.O. as a whole (for now we'll leave out discussions of SubDomains and BoundedContexts). Why model it as a whole? Because being able to retrieve the ENTIRE po with a single read operation preserves the natural 
-transactional boundary of the object. For instance, suppose that we want to maintain a field on the P.O. header that is essentially derived from sort of status of the lines. For convenience we just want to compute it has storeit on the P.O. header. In an RDBMS, you would HAVE TO use a transaction if the state of a line changed in such a way that this stored field on the header. With CommandPost (which I can admit stands for  Domain Driven Design Database, get it?),
-with CommandPost, when the P.O. is modeled as a single object, there is only ONE write to the database, so the transaction is implicit, around the natual transactional boundaries of the object itself.
+In reality though, as Domain Driven Design points out, a purchase order line typically has no meaning, no value, unless viewed in the context of the P.O. as a whole. One *possible* way of modelling that is more in keeping with DDD is to model the P.O. as a whole (for now we'll leave out discussions of SubDomains and BoundedContexts). Why model it as a whole? Because being able to save the ENTIRE po with a single write operation preserves the natural 
+transactional boundary of the object. For instance, suppose that we want to maintain a field on the P.O. header that is essentially derived from sort of status of the lines. For convenience we just want to compute it has store it on the P.O. header. In an RDBMS, you would HAVE TO use a transaction if the state of a line changed in such a way that this stored field on the header had to change as well. With CommandPost, with CommandPost, when the P.O. is modeled as a single object, there is only ONE write to the database, so the transaction is implicit, around the natual transactional boundaries of the object itself. There's no need to introduce the 'technical' notion of a database transaction. In short, DDD and tools like CommandPost put an end to "Table-Drive-Development", also known as 'the tail wagging the  dog'.
+
 
 With CommandPost, you certainly COULD model our example "the RDBMS way".  Let's take a look at how to model the PO in each of the two approaches.
 
@@ -43,20 +43,25 @@ First, the Domain-Driven-Design-inspired approach
 
 <pre><code>
 
-class PurachaseOrderHeader < Persistence
+ 
+
+
+class PurachaseOrderHeader &lt; Persistence
   
   include Identity
 
-  def initialize
-    super
+   def self.schema
     fields = Hash.new
-    fields[ 'order_date'   ] = { :required => true,       :type => Date,                              :location => :local                       } 
-    fields[ 'order_number  ] = { :required => true,       :type => String                             :location => :local                       } 
-    fields[ 'customer'     ] = { :required => true,       :type => Customer,                          :location => :remote, :auto_load => true  } 
-    fields[ 'order_total'  ] = { :required => true,       :type => Money,                             :location => :local                       } 
-    fields[ 'order_status' ] = { :required => true,       :type => String,                            :location => :local                       } 
-    fields[ 'order_lines  '] = { :required => true,       :type => Array,  :of => PurchaseOrderLine,  :location => :local                       } 
-    Address.init_schema fields 
+    fields[ 'order_date'      ] = { :required => true,       :type => Date,                              :location => :local                       } 
+    fields[ 'order_number     ] = { :required => true,       :type => String                             :location => :local                       } 
+    fields[ 'customer'        ] = { :required => true,       :type => Customer,                          :location => :remote, :auto_load => true  } 
+    fields[ 'order_total'     ] = { :required => true,       :type => Money,                             :location => :local                       } 
+    fields[ 'order_status'    ] = { :required => true,       :type => String,                            :location => :local                       } 
+    fields[ 'order_lines'     ] = { :required => true,       :type => Array,  :of => PurchaseOrderLine,  :location => :local                       } 
+    fields
+  end
+  def self.indexes
+   [:order_status]
   end
 
   def set_aggregate_lookup_value 
@@ -65,16 +70,17 @@ class PurachaseOrderHeader < Persistence
 
 end
 
-class PurachaseOrderLine < Persistence
-  def initialize
-    super
+class PurachaseOrderLine &lt; Persistence
+   
+  def self.schema
     fields = Hash.new
     fields[ 'header '          ] = { :required => true,       :type => PurachaseOrderHeader,              :location => :remote, :auto_load => true  }  
     fields[ 'product'          ] = { :required => true,       :type => Product,                           :location => :remote, :auto_load => true   }  
     fields[ 'finalized_price'  ] = { :required => true,       :type => Money,                             :location => :local                        } 
     fields[ 'quantity'         ] = { :required => true,       :type => Fixnum,                            :location => :local                        } 
-    Address.init_schema fields 
+    fields 
   end
+ 
 
   def extended_price
     
@@ -195,7 +201,7 @@ Now to persist this thing we would say something like this:
   hdr.save
 </code></pre>
 
-  We don't do that here. Mutating data without caputing WHY it changed is root of all evil.
+  We don't do that here. Mutating data without capturing WHY it changed is the root of all evil.
 
   Here, we used the 'Command Pattern'. In some ways, it is a bit more code (at first), but, it's makes almost impossible to write an application without understanding each business case where data is created or changed,
   and then creating a "command" to carry it out.
