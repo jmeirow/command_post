@@ -13,20 +13,49 @@ module CommandPost
     include DataValidation
     include AutoLoad
 
+    
+
     def initialize 
-      @@fields ||= Hash.new
-      @@indexes ||= Hash.new
-      @@methods ||= Hash.new 
-      @aggregate_info_set = false
-      @data = Hash.new
-      self.class.init_schema self.class.schema
-      self.class.init_indexes self.class.indexes
+      set_class_collections
+      set_ivars
+      initialize_schema_and_indexes
       create_methods
       Command.auto_generate self.class
     end
 
+
+
+    def set_class_collections
+      @@fields ||= Hash.new
+      @@indexes ||= Hash.new
+      @@methods ||= Hash.new 
+    end
+
+
+
+    def set_ivars
+      @aggregate_info_set = false
+      @data = Hash.new
+    end
+
+
+
+    def initialize_schema_and_indexes
+      self.class.init_schema self.class.schema
+      self.class.init_indexes self.class.indexes
+    end
+
+
+
     def create_methods
       return if @@methods[self.class] && @@methods[self.class] == true
+      create_data_access_methods 
+      create_index_access_methods
+    end
+
+
+
+    def create_data_access_methods
       self.schema_fields.keys.each do |key|
         self.class.send(:define_method, key) do 
           @data[key] 
@@ -35,7 +64,11 @@ module CommandPost
           @data[key] = value 
         end
       end
+    end
 
+
+
+    def create_index_access_methods
       self.index_fields.each do |field|
         self.class.send(:define_singleton_method, "#{field.to_s}_one_of".to_sym) do |values| 
           self.get_objects_for_in field, values
@@ -64,9 +97,9 @@ module CommandPost
 
 
     def schema_fields 
-      
       @@fields[self.class]
     end
+
 
     def index_fields 
       @@indexes[self.class]
@@ -82,35 +115,14 @@ module CommandPost
     end
 
 
-    def get_data name 
-      if schema_fields[name][:location] == :local
-        if schema_fields[name][:type] == DateTime
-          return DateHelper.parse_date_time(@data[name]) 
-        elsif schema_fields[name][:type] == Time
-          DateHelper.parse_time(@data[name]) 
-        else
-          return @data[name]
-        end
-      else 
-        if @data[name].class == Hash && @data[name].keys == [:aggregate_type,:aggregate_id]  
-          Aggregate.get_by_aggregate_id(schema_fields[name][:type], @data[name][:aggregate_id])
-        else 
-          @data[name]
-        end
-      end
-    end
-
-
     def self.stringify_values values
-
       values.collect{|x| "'#{x}'"}.join(',')
-
     end
+
 
     def self.listify(values)
       return values.collect { |x| "'#{x}'"}.join(',') if values.first.is_a? String
-      x = values.join(',')
-      x
+      values.join(',')
     end
 
 
@@ -231,37 +243,28 @@ module CommandPost
       @@fields[self] ||= fields 
     end
 
+
     def self.init_indexes index_fields
       @@indexes ||= Hash.new
-      # index_error_messages =  IndexValidation.validate_indexes(index_fields)
-      # if index_error_messages.length > 0
-      #   raise ArgumentError, "The declared indexes for #{self} had the following error(s): #{pp index_error_messages}"
-      # end
       @@indexes[self] ||= index_fields 
     end
 
 
- 
-    def self.load_from_hash the_class, string_hash
-
-      data_hash = HashUtil.symbolize_keys(string_hash)
-
-
+    def self.load_aggregate_info data_hash, the_class
       if  (data_hash.keys.include?(:aggregate_info) == false)  && (the_class.included_modules.include?(CommandPost::Identity) == true)
         data_hash[:aggregate_info] = Hash.new
         data_hash[:aggregate_info][:aggregate_type] = the_class.to_s
         data_hash[:aggregate_info][:version] = 1 
         data_hash[:aggregate_info][:aggregate_id] = SequenceGenerator.aggregate_id
       end
-
-
+    end      
+ 
+    def self.load_from_hash the_class, string_hash
+      data_hash = HashUtil.symbolize_keys(string_hash)
+      self.load_aggregate_info data_hash, the_class
       object =  the_class.new
       object.set_data  data_hash
-      object.populate_auto_load_fields #unless self.bypass_auto_load == true
-      object.populate_local_persistent_objects
-      # if (the_class.included_modules.include?(CommandPost::Identity) == true)
-      #   object.set_aggregate_lookup_value
-      # end
+      [:populate_auto_load_fields, :populate_local_persistent_objects].each {|x| object.send x}
       object
     end
 
