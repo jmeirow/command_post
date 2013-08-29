@@ -23,24 +23,3 @@ require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
       [:favorite_number]
     end
   end
-
-
-
-
-  # Test100Person.init_indexes Test100Person.indexes
-
-
-  ids = Test100Person.favorite_number_in([10,11,12])
-
-  puts "count = #{ids.count}"
-
- 
-
- 
-
-
-
-
-
-
-

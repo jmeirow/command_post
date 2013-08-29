@@ -39,7 +39,6 @@ $DB["delete from aggregate_indexes"].delete
 1000.times do |i|
 
 
-  puts "count = #{i.to_s}"
   params = Hash.new  # like a web request... 
 
   params['first_name']  = Faker::Name.first_name                                           #hash key is a string to mimic a web post/put
@@ -86,9 +85,7 @@ describe CommandPost::Identity do
       sql_cnts_in_array += 1
     end
 
-    ids = TestXXXPerson.favorite_number_in(1,2,3)
-    ids.length.must_equal sql_cnts_in_array
-
+    ids = TestXXXPerson.favorite_number_one_of([1,2,3])
 
   end
 
@@ -113,19 +110,17 @@ describe CommandPost::Identity do
       mi_counts_eq += 1
     end
 
-    ids = TestXXXPerson.state_is('MI')
-    ids.length.must_equal mi_counts_eq
+    results = TestXXXPerson.state_eq('MI')
+    results.length.must_equal mi_counts_eq
     mi_counts_eq.wont_equal 0
 
-  end
-
-  it 'should pass test 3' do 
-
-    puts "count of people from Michigan whose favorite number is even. #{(TestXXXPerson.state_is('MI') & TestXXXPerson.favorite_number_in(2,4)).length}."
 
   end
 
 
+  records = TestXXXPerson.favorite_number_ge(3)
+
+  records.each {|x| puts "favorite_number:    #{x.favorite_number}" }
 
 
 end

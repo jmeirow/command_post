@@ -62,12 +62,12 @@ module CommandPost
     private
     def save_event change 
 
-      puts "@aggregate_type       = #{@aggregate_type}   "
-      puts "@aggregate_id         = #{@aggregate_id}  "
-      puts "@transaction_id       = #{@transaction_id}   "
-      puts "@transacted           = #{@transacted}   "
-      puts "@event_description    = #{@event_description}   "
-      puts "@user_id              = #{@user_id}   "
+      # puts "@aggregate_type       = #{@aggregate_type}   "
+      # puts "@aggregate_id         = #{@aggregate_id}  "
+      # puts "@transaction_id       = #{@transaction_id}   "
+      # puts "@transacted           = #{@transacted}   "
+      # puts "@event_description    = #{@event_description}   "
+      # puts "@user_id              = #{@user_id}   "
 
 
       json = JSON.generate(change)

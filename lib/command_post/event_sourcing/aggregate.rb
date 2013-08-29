@@ -67,6 +67,27 @@ module CommandPost
     end
     
 
+    def self.get_for_indexed_single_value (sql, query_value, aggregate_type)
+      results = Array.new
+      $DB.fetch(sql, query_value ) do |row|
+        hash =  JSON.parse(row[:content])
+        results << aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
+      end
+      results
+
+
+    end
+
+    def self.get_for_indexed_multiple_values (sql, aggregate_type)
+      results = Array.new
+      $DB.fetch(sql ) do |row|
+        hash =  JSON.parse(row[:content])
+        results << aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
+      end
+      results
+    end
+
+
 
     def self.exists? aggregate_type, aggregate_lookup_value  
       $DB.fetch("SELECT count(*) as cnt FROM aggregates WHERE aggregate_type = ? and aggregate_lookup_value = ? ", aggregate_type.to_s, aggregate_lookup_value) do |rec|

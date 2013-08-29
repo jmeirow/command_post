@@ -14,14 +14,52 @@ module CommandPost
     include AutoLoad
 
     def initialize 
-
       @@fields ||= Hash.new
       @@indexes ||= Hash.new
+      @@methods ||= Hash.new 
       @aggregate_info_set = false
       @data = Hash.new
       self.class.init_schema self.class.schema
       self.class.init_indexes self.class.indexes
+      create_methods
       Command.auto_generate self.class
+    end
+
+    def create_methods
+      return if @@methods[self.class] && @@methods[self.class] == true
+      self.schema_fields.keys.each do |key|
+        self.class.send(:define_method, key) do 
+          @data[key] 
+        end
+        self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
+          @data[key] = value 
+        end
+      end
+
+      self.index_fields.each do |field|
+        self.class.send(:define_singleton_method, "#{field.to_s}_one_of".to_sym) do |values| 
+          self.get_objects_for_in field, values
+        end
+        self.class.send(:define_singleton_method, "#{field.to_s}_is".to_sym) do |value| 
+          self.get_objects_for_is field, value
+        end
+        self.class.send(:define_singleton_method, "#{field.to_s}_eq".to_sym) do |value| 
+          self.get_objects_for_is field, value
+        end
+        self.class.send(:define_singleton_method, "#{field.to_s}_gt".to_sym) do |value| 
+          self.get_objects_for_gt field, value
+        end    
+        self.class.send(:define_singleton_method, "#{field.to_s}_ge".to_sym) do |value| 
+          self.get_objects_for_ge field, value
+        end    
+        self.class.send(:define_singleton_method, "#{field.to_s}_lt".to_sym) do |value| 
+          self.get_objects_for_lt field, value
+        end    
+        self.class.send(:define_singleton_method, "#{field.to_s}_le".to_sym) do |value| 
+          self.get_objects_for_le field, value
+        end    
+      end
+      @@methods[self.class] = true
     end
 
 
@@ -71,18 +109,70 @@ module CommandPost
 
     def self.listify(values)
       return values.collect { |x| "'#{x}'"}.join(',') if values.first.is_a? String
-      values.collect { |x|  "#{x}"  }.join(',')
+      x = values.join(',')
+      x
     end
 
 
-    def self.get_sql_for_in  name, values
-      "SELECT  aggregate_id FROM    aggregate_indexes WHERE   index_field = '#{name}' AND   #{self.compute_index_column_name(values.first)} in (#{self.listify(values)}) "
+
+    def self.get_sql_for_in  index_field_name, query_values
+      list = self.listify query_values
+      sql = "
+      SELECT            A.* 
+      FROM              aggregates A 
+      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
+      AND               #{self.compute_index_column_name(query_values.first)} in (  #{list}  ) "
+      sql
     end
 
 
-    def self.get_sql_for_is  name , value
-      "SELECT  aggregate_id FROM    aggregate_indexes WHERE   index_field = '#{name}' AND  #{self.compute_index_column_name(value)} = ? "
+    def self.get_sql_for_is  index_field_name , query_value
+      "
+      SELECT            A.* 
+      FROM              aggregates A 
+      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
+      AND               #{self.compute_index_column_name(query_value)} = ? "
     end
+
+
+    def self.get_sql_for_gt  index_field_name , query_value
+      "
+      SELECT            A.* 
+      FROM              aggregates A 
+      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
+      AND               #{self.compute_index_column_name(query_value)} > ? "
+    end
+    def self.get_sql_for_ge  index_field_name , query_value
+
+      "
+      SELECT            A.* 
+      FROM              aggregates A 
+      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
+      AND               #{self.compute_index_column_name(query_value)} >= ? "
+    end
+    def self.get_sql_for_lt  index_field_name , query_value
+
+      "
+      SELECT            A.* 
+      FROM              aggregates A 
+      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
+      AND               #{self.compute_index_column_name(query_value)} < ? "
+    end
+
+    def self.get_sql_for_le  index_field_name , query_value
+      "
+      SELECT            A.* 
+      FROM              aggregates A 
+      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
+      AND               #{self.compute_index_column_name(query_value)} <= ? "
+    end
+
 
 
 
@@ -93,77 +183,42 @@ module CommandPost
     end
 
 
-    def self.get_ids_for_in index_name, *args
-      name = "#{self.to_s}.#{index_name.to_s.sub(/_in$/,'')}"
-      $DB.fetch(get_sql_for_in name, args.last).collect { |row|  row[:aggregate_id] }
+    def self.get_objects_for_in index_field_name, *args
+      Aggregate.get_for_indexed_multiple_values(  self.get_sql_for_in(index_field_name, args.last), self)
     end
 
-    def self.get_ids_for_is index_name, value
-      name = "#{self.to_s}.#{index_name.to_s.sub(/_is$/,'')}"
-      $DB.fetch(get_sql_for_is(name,value),value.to_s).collect { |row|  row[:aggregate_id] }
+    def self.get_objects_for_is index_field_name, query_value
+      Aggregate.get_for_indexed_single_value(  self.get_sql_for_is(index_field_name, query_value), query_value, self)
     end
 
-
-    def self.method_missing nm, *args , &block
-      name = nm.to_s
-      if (name.end_with?('_in') && self.indexes.include?(name.gsub(/_in/,'').to_sym))
-        ids =  self.get_ids_for_in nm, args
-        return ids
-      elsif (name.end_with?('_is') && self.indexes.include?(name.gsub(/_is/,'').to_sym))
-        ids =  self.get_ids_for_is nm, args.last
-        return ids
-      else
-        begin
-          super
-        rescue Exception => e
-          puts "DEBUG:   PRINTING BACKTRACE  #{'=' * 80}"
-           puts e.backtrace
-        end
-      end
+    def self.get_objects_for_gt index_field_name, query_value
+      Aggregate.get_for_indexed_single_value(  self.get_sql_for_gt(index_field_name, query_value), query_value, self)
     end
 
+    def self.get_objects_for_ge index_field_name, query_value
+      Aggregate.get_for_indexed_single_value( self.get_sql_for_ge(index_field_name, query_value), query_value, self)
+    end
 
-    def method_missing(nm, *args)
+    def self.get_objects_for_ll index_field_name, query_value
+      Aggregate.get_for_indexed_single_value( self.get_sql_for_lt(index_field_name, query_value), query_value, self)
+    end
 
-      name = nm.to_s
-      error_msg = "SCHEMA ERROR:  #{name} is not a defined attribute of or index on '#{self.class.to_s}'"
-      
-      if name.end_with?('=') == false
-        if @data.keys.include? nm
-            get_data nm
-        else 
-          if schema_fields.keys.include? nm 
-            return nil
-          else
-            begin
-              super
-            rescue Exception => e
-              raise error_msg
-            end
-          end
-        end
-      else
-        nm = name.gsub(/\=/,'').to_sym
-        raise  error_msg unless schema_fields.keys.include?(nm)  
-        @data[nm] = args.first
-      end
+    def self.get_objects_for_le index_field_name, query_value
+      Aggregate.get_for_indexed_single_value( self.get_sql_for_le(index_field_name, query_value) , query_value, self)
     end
 
 
     def aggregate_type
       self.class      
-      #@data[:aggregate_info][:aggregate_type]
     end
 
 
     def to_h 
-
       @data
     end
 
 
     def self.all
-
       Aggregate.where(self)
     end
 
