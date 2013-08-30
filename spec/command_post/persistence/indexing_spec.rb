@@ -117,10 +117,9 @@ describe CommandPost::Identity do
 
   end
 
-
-  records = TestXXXPerson.favorite_number_ge(3)
-
-  records.each {|x| puts "favorite_number:    #{x.favorite_number}" }
+  puts "#{Time.now}"
+  TestXXXPerson.state_eq('MI').select{|x| x.favorite_number >= 3 }.each {|x| puts "favorite_number:    #{x.favorite_number} and state #{x.state} "  }
+  puts "#{Time.now}"
 
 
 end
