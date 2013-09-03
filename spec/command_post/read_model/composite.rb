@@ -36,6 +36,9 @@ module CommandPost
   end
 
 end
+
+
+
 module CommandPost
 
   class AggregateEvent  
@@ -62,9 +65,9 @@ module CommandPost
       if changes
         save_event changes
       elsif object
-        # if object.data_errors.length > 0
-        #   raise object.data_errors.join(' ')
-        # end
+        if object.data_errors.length > 0
+          raise object.data_errors.join(' ')
+        end
         @aggregate_lookup_value = object.aggregate_lookup_value
         save_event object.to_h
       else
@@ -100,14 +103,6 @@ module CommandPost
 
     private
     def save_event change 
-
-      # puts "@aggregate_type       = #{@aggregate_type}   "
-      # puts "@aggregate_id         = #{@aggregate_id}  "
-      # puts "@transaction_id       = #{@transaction_id}   "
-      # puts "@transacted           = #{@transacted}   "
-      # puts "@event_description    = #{@event_description}   "
-      # puts "@user_id              = #{@user_id}   "
-
 
       json = JSON.generate(change)
       @@prepared_statement.call(
@@ -255,15 +250,9 @@ end
 
 
 
-
-
 module CommandPost
 
   class Command
-
-
-
-
 
     def validate_persistent_fields object, errors
       object.schema_fields.each do |field_name, field_info|
@@ -291,7 +280,6 @@ module CommandPost
     end
 
 
-
     def self.auto_generate persistent_class
       @@commands ||= Hash.new 
       return if @@commands.keys.include? persistent_class 
@@ -299,8 +287,6 @@ module CommandPost
       self.create_field_correction_commands persistent_class
       self.create_aggregate_creation_commands persistent_class
     end 
-
-
 
 
     def self.create_aggregate_creation_commands persistent_class 
@@ -798,9 +784,7 @@ module CommandPost
 
 
 
-    def to_s 
-      aggregate_id.to_s
-    end    
+
 
 
 
@@ -908,11 +892,16 @@ module CommandPost
           self.class.send(:define_method, key) do
             if @data[key].kind_of?CommandPost::Identity
               @data[key]
-            else 
-              klass = Object.const_get(schema_fields[key][:class])
-              id = @data[key].to_i
-              @data[key] = Aggregate.get_by_aggregate_id(klass,id)
-              @data[key]
+            else
+              if @data[key][:value]
+                puts "GETTING FROM CACHED DATA=============================================================="
+                @data[key][:value]
+              else 
+                puts "RETRIEVING FOR FIRST TIME AND CACHING=============================================================="
+                pointer = AggregatePointer.new @data[key]
+                klass = Object.const_get(schema_fields[key][:class])
+                @data[key][:value] = Aggregate.get_by_aggregate_id(klass,pointer.aggregate_id)
+              end
             end
           end
         else
@@ -923,19 +912,21 @@ module CommandPost
       end
     end
 
+
+    def get_value key,value
+      if value.is_a?(CommandPost::Identity) == true 
+        @data[key] = value.aggregate_pointer 
+      else
+        @data[key] =  value 
+      end
+    end
+
     def create_setters
-
       schema_fields.keys.each do |key|
-
         self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
-        if value.is_a?(CommandPost::Identity) == true 
-            @data[key] = value.aggregate_info 
-          else
-            @data[key] = 'xxx' #value 
-          end
+          get_value key, value
         end
       end
-
     end
 
 
@@ -1141,14 +1132,26 @@ $DB["delete from aggregate_indexes"].delete
         "required"    => ["first_name", "last_name", "ssn", "age"],
         
         "properties"  => {
-                            "first_name"    =>  { "type"          =>  "string"              },
-                            "last_name"     =>  { "type"          =>  "string"              }, 
-                            "ssn"           =>  { "type"          =>  "string",        
-                                                  "upcase"        =>  true                  }, 
-                            "age"           =>  { "type"          =>  "integer"             },
-                            "address"       =>  { "type"          => "object",
-                                                  "class"         => "Address"              }
-                          }
+          "first_name"    =>  { "type"          =>  "string"              },
+        
+          "last_name"     =>  { "type"          =>  "string"              }, 
+        
+          "ssn"           =>  { "type"          =>  "string",        
+                                "upcase"        =>  true                  }, 
+        
+          "age"           =>  { "type"          =>  "integer"             },
+        
+          "address"       =>  { "type"          => "object",
+                                "class"         =>  "Address",
+                                "required"    => ["aggregate_type", "aggregate_id", "class_name"],                  
+                                "properties"    => {
+
+                                  "aggregate_type"      =>  { "type"          =>  "string"        },
+                                  "aggregate_id"        =>  { "type"          =>  "integer"       },
+                                  "class_name"          =>  { "type"          =>  "string"        }
+              }
+            }
+          }
       }
     end
 
@@ -1223,10 +1226,10 @@ $DB["delete from aggregate_indexes"].delete
 
 
 
-  params = {:first_name => 'Joseph', :last_name => 'Meirow', :age => 50, :ssn => '123456789', :address => a}
+  params = {:first_name => 'Joseph', :last_name => 'Meirow', :age => 50, :ssn => '123456789'}
 
   p = Person.load_from_hash params
-
+  p.address = a
    
 
 
@@ -1240,11 +1243,15 @@ $DB["delete from aggregate_indexes"].delete
 
 
   joe = CommandPost::Aggregate.get_aggregate_by_lookup_value Person, '123456789'
+  pp joe
   
   
   puts joe.first_name
+  puts joe.address.address_1
   puts joe.address.city
-  pp joe
+  puts joe.address.state
+  puts joe.address.zip
+  
 
 
   
