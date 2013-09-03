@@ -26,6 +26,9 @@ module CommandPost
       if changes
         save_event changes
       elsif object
+        if object.data_errors.length > 0
+          raise object.data_errors.join(' ')
+        end
         @aggregate_lookup_value = object.aggregate_lookup_value
         save_event object.to_h
       else
@@ -61,14 +64,6 @@ module CommandPost
 
     private
     def save_event change 
-
-      # puts "@aggregate_type       = #{@aggregate_type}   "
-      # puts "@aggregate_id         = #{@aggregate_id}  "
-      # puts "@transaction_id       = #{@transaction_id}   "
-      # puts "@transacted           = #{@transacted}   "
-      # puts "@event_description    = #{@event_description}   "
-      # puts "@user_id              = #{@user_id}   "
-
 
       json = JSON.generate(change)
       @@prepared_statement.call(

@@ -5,6 +5,7 @@ require 'sequel'
 
 module CommandPost
 
+
   class SequenceGenerator
 
 
@@ -34,8 +35,8 @@ module CommandPost
       end
       val
     end
-
   end
+
 
 end
 

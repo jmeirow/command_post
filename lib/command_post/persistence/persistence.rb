@@ -3,12 +3,15 @@ require_relative './data_validation'
 require_relative './auto_load'
  
 
-module CommandPost
+
+
 
   class Persistence 
-    include SchemaValidation
-    include DataValidation
-    include AutoLoad
+    # include SchemaValidation
+    # include DataValidation
+    #include AutoLoad
+
+
 
     
 
@@ -22,10 +25,9 @@ module CommandPost
 
 
 
-    def schema_fields 
-      @@fields[self.class]
+    def self.schema_fields 
+      @@fields[self]
     end
-
 
 
     def index_fields 
@@ -65,18 +67,13 @@ module CommandPost
 
 
 
+ 
 
 
 
-
-private
 
     def self.init_schema fields
-      schema_error_messages =  SchemaValidation.validate_schema(fields)
-      if schema_error_messages.length > 0
-        raise ArgumentError, "The schema for #{self} had the following error(s): #{pp schema_error_messages}"
-      end
-      @@fields[self] ||= fields 
+      @@fields[self] ||= HashUtil.symbolize_keys(fields)[:properties] 
     end
 
 
@@ -88,10 +85,10 @@ private
 
 
 
-    def self.load_aggregate_info data_hash, the_class
-      if  (data_hash.keys.include?(:aggregate_info) == false)  && (the_class.included_modules.include?(CommandPost::Identity) == true)
+    def self.load_aggregate_info data_hash 
+      if  (data_hash.keys.include?(:aggregate_info) == false)  && (self.included_modules.include?(CommandPost::Identity) == true)
         data_hash[:aggregate_info] = Hash.new
-        data_hash[:aggregate_info][:aggregate_type] = the_class.to_s
+        data_hash[:aggregate_info][:aggregate_type] = self.to_s
         data_hash[:aggregate_info][:version] = 1 
         data_hash[:aggregate_info][:aggregate_id] = SequenceGenerator.aggregate_id
       end
@@ -99,12 +96,11 @@ private
 
 
  
-    def self.load_from_hash the_class, string_hash
+    def self.load_from_hash  string_hash
       data_hash = HashUtil.symbolize_keys(string_hash)
-      self.load_aggregate_info data_hash, the_class
-      object =  the_class.new
+      self.load_aggregate_info data_hash
+      object =  self.new
       object.set_data  data_hash
-      [:populate_auto_load_fields, :populate_local_persistent_objects].each {|x| object.send x}
       object
     end
 
@@ -124,12 +120,14 @@ private
     end
 
 
-    def self.upcase? field_name
-      raise ArgumentError ,"field not found " if (schema.keys.include?(field_name) == false) 
-      field_info = schema[field_name]
-      field_info.keys.include?(:upcase) ? field_info[:upcase] : false
+
+    def schema_fields
+      @@fields[self.class]
     end
 
+    def self.schema_fields
+      @@fields[self]
+    end   
 
 
     def set_class_collections
@@ -162,18 +160,53 @@ private
 
 
 
-
     def create_data_access_methods
-      self.schema_fields.keys.each do |key|
-        self.class.send(:define_method, key) do 
-          @data[key] 
-        end
-        self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
-          @data[key] = value 
+      create_getters
+      create_setters
+    end
+
+    def create_getters
+      schema_fields.keys.each do |key|
+        if schema_fields[key][:type] == 'object'
+          self.class.send(:define_method, key) do
+            if @data[key].kind_of?CommandPost::Identity
+              @data[key]
+            else
+              if @data[key][:value]
+                puts "GETTING FROM CACHED DATA=============================================================="
+                @data[key][:value]
+              else 
+                puts "RETRIEVING FOR FIRST TIME AND CACHING=============================================================="
+                pointer = AggregatePointer.new @data[key]
+                klass = Object.const_get(schema_fields[key][:class])
+                @data[key][:value] = Aggregate.get_by_aggregate_id(klass,pointer.aggregate_id)
+              end
+            end
+          end
+        else
+          self.class.send(:define_method, key) do 
+            @data[key]
+          end
         end
       end
     end
 
+
+    def get_value key,value
+      if value.is_a?(CommandPost::Identity) == true 
+        @data[key] = value.aggregate_pointer 
+      else
+        @data[key] =  value 
+      end
+    end
+
+    def create_setters
+      schema_fields.keys.each do |key|
+        self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
+          get_value key, value
+        end
+      end
+    end
 
 
     def create_index_access_methods
@@ -328,8 +361,12 @@ private
       Aggregate.get_for_indexed_single_value( self.get_sql_for_le(index_field_name, query_value) , query_value, self)
     end
 
+  
+    # def self.schema_errors
 
+    # end    
+   
+    def data_errors
+      JSON::Validator.fully_validate(self.class.schema, HashUtil.stringify_keys(@data),  :errors_as_objects => true, :validate_schema => true)
+    end
   end
-end
-
-

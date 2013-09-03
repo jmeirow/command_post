@@ -3,6 +3,7 @@ require 'securerandom'
 require 'json'
 require 'sequel'
 
+
 module CommandPost
 
 
@@ -52,7 +53,7 @@ module CommandPost
       $DB.fetch("SELECT * FROM aggregates WHERE aggregate_id = ?",  aggregate_id ) do |row|
         hash = JSON.parse(row[:content])
       end
-      aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
+      aggregate_type.load_from_hash(HashUtil.symbolize_keys(hash))
     end
 
 
@@ -61,7 +62,7 @@ module CommandPost
       results = Array.new
       $DB.fetch("SELECT * FROM aggregates WHERE aggregate_type = ?", aggregate_type.to_s) do |row|
         hash =  JSON.parse(row[:content])
-        results << aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
+        results << aggregate_type.load_from_hash(HashUtil.symbolize_keys(hash))
       end
       results
     end
@@ -71,7 +72,7 @@ module CommandPost
       results = Array.new
       $DB.fetch(sql, query_value ) do |row|
         hash =  JSON.parse(row[:content])
-        results << aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
+        results << aggregate_type.load_from_hash(HashUtil.symbolize_keys(hash))
       end
       results
 
@@ -82,7 +83,7 @@ module CommandPost
       results = Array.new
       $DB.fetch(sql ) do |row|
         hash =  JSON.parse(row[:content])
-        results << aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
+        results << aggregate_type.load_from_hash(  HashUtil.symbolize_keys(hash))
       end
       results
     end
@@ -105,7 +106,7 @@ module CommandPost
       if hash.nil? || hash == {}
         {}
       else
-        aggregate_type.load_from_hash( aggregate_type, HashUtil.symbolize_keys(hash))
+        aggregate_type.load_from_hash(  HashUtil.symbolize_keys(hash))
       end
     end
   end

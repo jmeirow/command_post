@@ -55,8 +55,8 @@ module CommandPost
 
       Aggregate.get_by_aggregate_id self, aggregate_id
     end
-    
   end
+
 
 end
 

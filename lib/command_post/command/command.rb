@@ -6,30 +6,6 @@ module CommandPost
 
   class Command
 
-    def validate_persistent_fields object, errors
-      object.schema_fields.each do |field_name, field_info|
-        if field_info[:type].superclass == Persistence
-          if object.send(field_name.to_sym).valid? == false
-            errors += object.send(field_name.to_sym).data_errors
-          else
-            errors += validate_persistent_fields(object.send(field_name.to_sym), errors)
-          end
-        end
-      end
-      errors
-    end
-
-
-    def hashify_persistent_objects_before_save object
-      object.schema_fields.each do |field_name, field_info|
-        if field_info[:type].superclass == Persistence 
-          hashify_persistent_objects_before_save (object.send field_name.to_sym)
-          hash = object.send(field_name.to_sym).to_h
-          method_name = "#{field_name}=".to_sym
-          object.send(method_name, hash)
-        end
-      end
-    end
 
 
 
@@ -40,8 +16,6 @@ module CommandPost
       self.create_field_correction_commands persistent_class
       self.create_aggregate_creation_commands persistent_class
     end 
-
-
 
 
     def self.create_aggregate_creation_commands persistent_class 
@@ -89,7 +63,7 @@ module CommandPost
 
 
       current_state = Array.new 
-      persistent_class.schema.each do |form_field, form_field_info|
+      persistent_class.schema_fields.each do |form_field, form_field_info|
         current_state <<  " '#{form_field}' =>  {     'label' =>   '#{StringUtil.to_label(form_field, persistent_class.upcase?(form_field))}',   'html' =>   \"<input type='text' id='#{form_field}' name='#{form_field}'/>\" } "
       end 
 
@@ -118,7 +92,7 @@ module CommandPost
 
 
 
-      fields = persistent_class.schema.keys.collect {|field| ":#{field}" }
+      fields = persistent_class.schema_fields.keys.collect {|field| ":#{field}" }
 
       array_of_fields = fields.join(',')
 
@@ -153,16 +127,11 @@ module CommandPost
 
 
 
-
-
-
-
-
-
-
     def self.create_field_correction_commands persistent_class
 
-      persistent_class.schema.each do |field_name, field_info|
+
+
+      persistent_class.schema_fields.each do |field_name, field_info|
 
 
         modules = persistent_class.to_s.split('::').length - 1
@@ -174,7 +143,6 @@ module CommandPost
         elsif modules == 1
           name = "Command#{names[1]}Correct#{CommandPost::StringUtil.to_camel_case(field_name,persistent_class.upcase?(field_name))}"
         end
-
 
         klass = Object::const_set(name, Class::new(Command) do end  )
 
@@ -213,7 +181,7 @@ module CommandPost
 
 
         current_state = Array.new 
-        persistent_class.schema.each do |form_field, form_field_info|
+        persistent_class.schema_fields.each do |form_field, form_field_info|
           current_state  << "                              '#{StringUtil.to_label(form_field, persistent_class.upcase?(form_field))}' =>  object.#{form_field}.to_s  "
         end 
         def_init << current_state.join(",  ")
@@ -334,7 +302,6 @@ module CommandPost
 
     end
   end
-
 
 
 

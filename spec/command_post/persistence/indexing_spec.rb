@@ -1,14 +1,8 @@
 require 'faker'
 require 'securerandom'
-
-require 'pry'
-require 'pry-debugger'
-
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
-$DB["delete from aggregates"].delete
-$DB["delete from aggregate_events"].delete
-$DB["delete from aggregate_indexes"].delete
+
 
 class TestXXXPerson < CommandPost::Persistence 
   include CommandPost::Identity
