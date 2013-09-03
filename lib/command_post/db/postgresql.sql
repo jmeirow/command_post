@@ -1,6 +1,6 @@
---DROP TABLE AGGREGATE_EVENTS;
---DROP TABLE AGGREGATES;
-
+﻿--   DROP TABLE AGGREGATE_EVENTS;
+--   DROP TABLE AGGREGATES;
+--   DROP TABLE AGGREGATE_INDEXES;
 
 
 CREATE TABLE aggregate_events (
@@ -10,13 +10,12 @@ CREATE TABLE aggregate_events (
     aggregate_type      VARCHAR(100),
     event_description   TEXT,
     content             TEXT,
-    call_stack          TEXT, 
     user_id         	VARCHAR(100) NOT NULL,
     transacted          TIMESTAMP
 
    )  ;
 
-CREATE INDEX aggregate_id_idx ON aggregate_events(aggregate_id,aggregate_type);
+CREATE INDEX aggregate_events_idx ON aggregate_events(aggregate_id,aggregate_type);
 
 
 

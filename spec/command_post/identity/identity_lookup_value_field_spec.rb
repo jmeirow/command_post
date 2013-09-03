@@ -2,7 +2,6 @@ require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 
 
-
 class Test001Person < CommandPost::Persistence 
   include CommandPost::Identity
 
@@ -14,9 +13,13 @@ class Test001Person < CommandPost::Persistence
     fields[  :first_name        ] = { :required => true,       :type => String,    :location => :local  } 
     fields[  :last_name         ] = { :required => true,       :type => String,    :location => :local  } 
     fields[  :ssn               ] = { :required => true,       :type => String,    :location => :local  } 
-    fields[  :lookup            ] = { :use => :ssn }
     fields 
   end 
+
+  def self.unique_lookup_value
+    :ssn
+  end
+
   def self.indexes
     []
   end
@@ -69,6 +72,15 @@ describe CommandPost::Identity do
     params['last_name'].must_equal saved_person2.last_name
     params['ssn'].must_equal saved_person2.ssn
   end
+
+
+
+
+
+
+
+
+
 end
 
 

@@ -36,7 +36,7 @@ module CommandPost
     
     def self.validate_lookup field_name, field_info
       errors = Array.new 
-      keywords = [:use ]
+      keywords = self.lookup_value #[:use ]
       field_info.keys.each do |key| 
         if keywords.include?(key)==false 
           errors << "Lookup Field has invalid keyword '#{key}'." 

@@ -7,7 +7,7 @@ module CommandPost
 
  
     def aggregate_lookup_value
-      field = (schema_fields[:lookup][:use])
+      field = self.class.unique_lookup_value #(schema_fields[:lookup][:use])
       (self.send field.to_sym).to_s
     end
 

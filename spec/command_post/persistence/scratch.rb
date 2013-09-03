@@ -16,10 +16,14 @@ require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
       fields[  :last_name         ] = { :required => true,       :type => String,    :location => :local  } 
       fields[  :ssn               ] = { :required => true,       :type => String,    :location => :local  } 
       fields[  :favorite_number   ] = { :required => true,       :type => Fixnum,    :location => :local  } 
-      fields[  :lookup            ] = { :use => :ssn }
-      fields 
-    end 
-    def self.indexes
+    fields 
+  end
+
+  def self.unique_lookup_value 
+    :ssn 
+  end
+  
+  def self.indexes
       [:favorite_number]
     end
   end

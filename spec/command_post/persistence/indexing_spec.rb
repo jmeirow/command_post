@@ -6,7 +6,9 @@ require 'pry-debugger'
 
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
-
+$DB["delete from aggregates"].delete
+$DB["delete from aggregate_events"].delete
+$DB["delete from aggregate_indexes"].delete
 
 class TestXXXPerson < CommandPost::Persistence 
   include CommandPost::Identity
@@ -21,18 +23,19 @@ class TestXXXPerson < CommandPost::Persistence
     fields[  :ssn               ] = { :required => true,       :type => String,    :location => :local  } 
     fields[  :state             ] = { :required => true,       :type => String,    :location => :local  }
     fields[  :favorite_number   ] = { :required => true,       :type => Fixnum,    :location => :local  } 
-    fields[  :lookup            ] = { :use => :ssn }
     fields 
-  end 
+  end
+
+  def self.unique_lookup_value 
+    :ssn 
+  end
+
   def self.indexes
     [:favorite_number, :state]
   end
 end
 
 
-$DB["delete from aggregates"].delete
-$DB["delete from aggregate_events"].delete
-$DB["delete from aggregate_indexes"].delete
 
 
 
@@ -99,7 +102,6 @@ describe CommandPost::Identity do
     ids = TestXXXPerson.favorite_number_is(4)
     ids.length.must_equal sql_cnts_eq
     sql_cnts_eq.wont_equal 0
-
   end
 
   it 'should pass test 3' do 
@@ -113,8 +115,6 @@ describe CommandPost::Identity do
     results = TestXXXPerson.state_eq('MI')
     results.length.must_equal mi_counts_eq
     mi_counts_eq.wont_equal 0
-
-
   end
 
   puts "#{Time.now}"

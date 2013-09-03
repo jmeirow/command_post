@@ -1,5 +1,10 @@
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
+
+
+
+
+
   describe CommandPost::Persistence do 
 
     it 'should complain if the schema is bad' do

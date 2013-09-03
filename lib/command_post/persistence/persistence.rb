@@ -1,10 +1,7 @@
 require_relative './schema_validation'
 require_relative './data_validation'
 require_relative './auto_load'
-
-require 'pry'
-require 'pry-debugger'
-
+ 
 
 module CommandPost
 
@@ -162,6 +159,7 @@ private
       create_data_access_methods 
       create_index_access_methods
     end
+
 
 
 

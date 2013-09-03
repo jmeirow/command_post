@@ -17,6 +17,21 @@ class HashUtil
       result
     }
   end
+
+  def self.stringify_keys(hash)
+    hash.inject({}){|result, (key, value)|
+      new_key = case key
+                when Symbol then key.to_s
+                else key
+                end
+      new_value = case value
+                  when Hash then stringify_keys(value)
+                  else value
+                  end
+      result[new_key] = new_value
+      result
+    }
+  end
   
 end
 

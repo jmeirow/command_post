@@ -1,0 +1,23 @@
+
+
+
+{
+
+
+  "command_name":"CommandCorrectPersonLastName",
+  "aggregate_type":"Person",
+  "aggregate_id":"550E8400-E29B-41D4-A716-446655440000",
+  "version_before_change":1,
+  "attribute":"last_name",
+  "new_value":"Smith",
+  "transaction_id":"550E8400-E29B-41D4-A716-446655440000",
+  "originator":"JohnsonMR",
+  "transacted":"2013-8-30 13:04:32"
+
+
+
+
+
+
+}
+
