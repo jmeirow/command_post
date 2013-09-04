@@ -71,7 +71,14 @@ module CommandPost
 
 
  
+    def stringify_keys
+      @data = HashUtil.stringify_keys(@data)
+    end
 
+
+    def symbolize_keys
+      @data = HashUtil.symbolize_keys(@data)
+    end
 
 
 
@@ -160,10 +167,10 @@ module CommandPost
 
     def create_getters
       schema_fields.keys.each do |key|
-        if ((schema_fields[key][:type] == 'object') && (schema_fields[key][:class] == 'Identity'))
-          create_identity_getter
-        elsif ((schema_fields[key][:type] == 'object') && (schema_fields[key][:class] == 'Date'))
-          create_date_getter
+        if ((schema_fields[key][:type] == 'string' ) && (schema_fields[key][:class] == 'Identity'))
+          create_identity_getter key
+        elsif ((schema_fields[key][:type] == 'string') && (schema_fields[key][:class] == 'Date'))
+          create_date_getter key
         else
           self.class.send(:define_method, key) do 
             @data[key]
@@ -247,9 +254,6 @@ module CommandPost
     end
 
 
-    def self.stringify_values values
-      values.collect{|x| "'#{x}'"}.join(',')
-    end
 
 
 
@@ -371,13 +375,11 @@ module CommandPost
       Aggregate.get_for_indexed_single_value( self.get_sql_for_le(index_field_name, query_value) , query_value, self)
     end
 
-  
-    # def self.schema_errors
-
-    # end    
+   
    
     def data_errors
-      JSON::Validator.fully_validate(self.class.schema, HashUtil.stringify_keys(@data),  :errors_as_objects => true, :validate_schema => true)
+      pp self.class.schema
+      JSON::Validator.fully_validate(JSON::Schema.add_indifferent_access(self.class.schema), @data,  :errors_as_objects => true, :validate_schema => true)
     end
   end
 end
