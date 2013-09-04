@@ -1,7 +1,7 @@
 
-# module CommandPost
+module CommandPost
 
-#   module DataValidation
+  module DataValidation
 
 #     def empty?
 
@@ -106,6 +106,6 @@
 #     end
 
 
-#   end
+  end
 
-# end
+end

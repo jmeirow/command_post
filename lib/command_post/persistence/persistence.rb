@@ -1,10 +1,10 @@
+require 'json-schema' 
 require_relative './schema_validation'
 require_relative './data_validation'
 require_relative './auto_load'
- 
 
 
-
+module CommandPost
 
   class Persistence 
     # include SchemaValidation
@@ -64,7 +64,10 @@ require_relative './auto_load'
 
 
 
-
+    def self.upcase? field 
+      info = schema_fields[field]
+      info[:upcase] && info[:upcase] == true 
+    end
 
 
  
@@ -73,7 +76,7 @@ require_relative './auto_load'
 
 
     def self.init_schema fields
-      @@fields[self] ||= HashUtil.symbolize_keys(fields)[:properties] 
+      @@fields[self] ||= fields
     end
 
 
@@ -106,28 +109,16 @@ require_relative './auto_load'
 
 
 
-    def self.bypass_auto_load
-      @@bypass ||= Hash.new
-      @@bypass[self] ||= false 
-      @@bypass[self]
-    end
-
-
-    
-    def self.bypass_auto_load=(value)
-      @@bypass ||= Hash.new
-      @@bypass[self]=value 
-    end
-
-
-
     def schema_fields
       @@fields[self.class]
     end
 
+
+
     def self.schema_fields
       @@fields[self]
     end   
+
 
 
     def set_class_collections
@@ -146,7 +137,7 @@ require_relative './auto_load'
 
 
     def initialize_schema_and_indexes
-      self.class.init_schema self.class.schema
+      self.class.init_schema HashUtil.symbolize_keys(self.class.schema)[:properties]
       self.class.init_indexes self.class.indexes
     end
 
@@ -165,24 +156,14 @@ require_relative './auto_load'
       create_setters
     end
 
+
+
     def create_getters
       schema_fields.keys.each do |key|
-        if schema_fields[key][:type] == 'object'
-          self.class.send(:define_method, key) do
-            if @data[key].kind_of?CommandPost::Identity
-              @data[key]
-            else
-              if @data[key][:value]
-                puts "GETTING FROM CACHED DATA=============================================================="
-                @data[key][:value]
-              else 
-                puts "RETRIEVING FOR FIRST TIME AND CACHING=============================================================="
-                pointer = AggregatePointer.new @data[key]
-                klass = Object.const_get(schema_fields[key][:class])
-                @data[key][:value] = Aggregate.get_by_aggregate_id(klass,pointer.aggregate_id)
-              end
-            end
-          end
+        if ((schema_fields[key][:type] == 'object') && (schema_fields[key][:class] == 'Identity'))
+          create_identity_getter
+        elsif ((schema_fields[key][:type] == 'object') && (schema_fields[key][:class] == 'Date'))
+          create_date_getter
         else
           self.class.send(:define_method, key) do 
             @data[key]
@@ -192,18 +173,47 @@ require_relative './auto_load'
     end
 
 
+
+    def create_identity_getter key 
+      self.class.send(:define_method, key) do
+        if @data[key][:value]
+          @data[key][:value]
+        else
+          pointer = AggregatePointer.new @data[key]
+          klass = Object.const_get(schema_fields[key][:class])
+          @data[key][:value] = Aggregate.get_by_aggregate_id(klass,pointer.aggregate_id)
+        end
+      end
+    end
+
+
+
+    def create_date_getter key 
+      self.class.send(:define_method, key) do
+        if @data[key][:value]
+          @data[key][:value]
+        else
+          @data[key][:value] = Date._strptime(@data[key],"%m/%d/%Y")
+        end
+      end
+    end
+
+
+
     def get_value key,value
       if value.is_a?(CommandPost::Identity) == true 
-        @data[key] = value.aggregate_pointer 
+        value.aggregate_pointer 
+      elsif value.is_a?Date 
+        value.strftime("%m/%d/%Y")  
       else
-        @data[key] =  value 
+        value 
       end
     end
 
     def create_setters
       schema_fields.keys.each do |key|
         self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
-          get_value key, value
+          @data[key] = get_value key, value
         end
       end
     end
@@ -370,3 +380,4 @@ require_relative './auto_load'
       JSON::Validator.fully_validate(self.class.schema, HashUtil.stringify_keys(@data),  :errors_as_objects => true, :validate_schema => true)
     end
   end
+end

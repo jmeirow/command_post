@@ -1,3 +1,3 @@
-require_relative '../lib/command_post.rb'
-require 'minitest/spec'
+require File.expand_path(File.dirname(__FILE__) + '/../lib/command_post')
 require 'minitest/autorun'
+require 'minitest/spec'

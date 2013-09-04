@@ -1119,7 +1119,7 @@ $DB["delete from aggregate_indexes"].delete
           "age"           =>  { "type"          =>  "integer"             },
         
           "address"       =>  { "type"          => "object",
-                                "class"         =>  "Address",
+                                "class"         =>  "Identity",
                                 "required"    => ["aggregate_type", "aggregate_id", "class_name"],                  
                                 "properties"    => {
 

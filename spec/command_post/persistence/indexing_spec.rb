@@ -11,13 +11,20 @@ class TestXXXPerson < CommandPost::Persistence
     super
   end
   def self.schema 
-    fields = Hash.new
-    fields[  :first_name        ] = { :required => true,       :type => String,    :location => :local  } 
-    fields[  :last_name         ] = { :required => true,       :type => String,    :location => :local  } 
-    fields[  :ssn               ] = { :required => true,       :type => String,    :location => :local  } 
-    fields[  :state             ] = { :required => true,       :type => String,    :location => :local  }
-    fields[  :favorite_number   ] = { :required => true,       :type => Fixnum,    :location => :local  } 
-    fields 
+    {
+        "title"           => "TestXXXPerson",
+        "required"        => ["first_name", "last_name", "ssn", "state", "favorite_number"],
+        "type"            => "object",
+        "properties" => {
+                          "first_name"        =>  { "type"          =>  "string"        },
+                          "last_name"         =>  { "type"          =>  "string"        },
+                          "ssn"               =>  { "type"          =>  "string"        },
+                          "state"             =>  { "type"          =>  "string"        },
+                          "favorite_number"   =>  { "type"          =>  "integer"       }
+                           
+                        },
+      }
+
   end
 
   def self.unique_lookup_value 
@@ -49,7 +56,7 @@ end
   # 'handle' method of the CommandXXXXXX class.
   #----------------------------------------------------------------
 
-  object = TestXXXPerson.load_from_hash TestXXXPerson, params
+  object = TestXXXPerson.load_from_hash   params
   puts "OBJECT IS NIL #{'=' * 80}" if object.nil?
   event = CommandPost::AggregateEvent.new 
   event.aggregate_id = object.aggregate_id

@@ -1,9 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
-
-
-
-
 class Test002Person < CommandPost::Persistence 
   include CommandPost::Identity
 
@@ -11,11 +7,18 @@ class Test002Person < CommandPost::Persistence
     super
   end
   def self.schema 
-    fields = Hash.new
-    fields[  :first_name        ] = { :required => true,       :type => String,    :location => :local  } 
-    fields[  :last_name         ] = { :required => true,       :type => String,    :location => :local  } 
-    fields[  :ssn               ] = { :required => true,       :type => String,    :location => :local  } 
-    fields 
+    {
+        "title"           => "Test002Person",
+        "required"        => ["first_name", "last_name", "ssn"],
+        "type"            => "object",
+        "properties" => {
+                          "first_name"    =>  { "type"          =>  "string"        },
+                          "last_name"     =>  { "type"          =>  "string"        },
+                          "ssn"           =>  { "type"          =>  "string"        }
+                           
+                        },
+      }
+    
   end
 
   def self.unique_lookup_value 
@@ -43,7 +46,7 @@ describe CommandPost::Identity do
     # 'handle' method of the CommandXXXXXX class.
     #----------------------------------------------------------------
 
-    object = Test002Person.load_from_hash Test002Person, params
+    object = Test002Person.load_from_hash  params
     event = CommandPost::AggregateEvent.new 
     event.aggregate_id = object.aggregate_id
     event.object = object
