@@ -7,13 +7,6 @@ require_relative './auto_load'
 module CommandPost
 
   class Persistence 
-    # include SchemaValidation
-    # include DataValidation
-    #include AutoLoad
-
-
-
-    
 
     def initialize 
       set_class_collections
@@ -28,6 +21,7 @@ module CommandPost
     def self.schema_fields 
       @@fields[self]
     end
+
 
 
     def index_fields 
@@ -45,9 +39,27 @@ module CommandPost
 
 
 
+    def set_ivars
+      @aggregate_info_set = false
+      @data = Hash.new
+      @old_data = Hash.new
+    end
+
+
+
     def aggregate_type
       self.class      
     end
+
+    def changes
+      chgs = Hash.new
+      @old_data.keys.each do |key|
+          chgs[key] = {  :old_value =>@old_data[key] , :new_value => @data[key] }
+        end
+      end
+      chgs
+    end 
+
 
 
 
@@ -93,7 +105,7 @@ module CommandPost
       @@indexes[self] ||= index_fields 
     end
 
-
+ 
 
     def self.load_aggregate_info data_hash 
       if  (data_hash.keys.include?(:aggregate_info) == false)  && (self.included_modules.include?(CommandPost::Identity) == true)
@@ -136,10 +148,6 @@ module CommandPost
 
 
 
-    def set_ivars
-      @aggregate_info_set = false
-      @data = Hash.new
-    end
 
 
 
@@ -169,8 +177,6 @@ module CommandPost
       schema_fields.keys.each do |key|
         if ((schema_fields[key][:type] == 'string' ) && (schema_fields[key][:class] == 'Identity'))
           create_identity_getter key
-        elsif ((schema_fields[key][:type] == 'string') && (schema_fields[key][:class] == 'Date'))
-          create_date_getter key
         else
           self.class.send(:define_method, key) do 
             @data[key]
@@ -194,33 +200,37 @@ module CommandPost
     end
 
 
-
-    def create_date_getter key 
-      self.class.send(:define_method, key) do
-        if @data[key][:value]
-          @data[key][:value]
-        else
-          @data[key][:value] = Date._strptime(@data[key],"%m/%d/%Y")
-        end
-      end
-    end
-
-
-
     def get_value key,value
       if value.is_a?(CommandPost::Identity) == true 
-        value.aggregate_pointer 
-      elsif value.is_a?Date 
-        value.strftime("%m/%d/%Y")  
+        value.aggregate_pointer
       else
         value 
       end
     end
 
+
+    def changes
+      chgs = Hash.new 
+      @data.keys.each do |key|
+        if @data[key][:original_value]
+
+          chgs[key] = {:old => @data[key][:original_value], :new => @data[:key]}
+        end
+      end
+      chgs 
+    end
+
+    def set_values key, value
+      old_value = @data[key]
+      new_value = get_value key, value
+      @old_data[key] = old_value if (old_value != new_value)
+      @data[key] = get_value key, value 
+    end
+
     def create_setters
       schema_fields.keys.each do |key|
         self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
-          @data[key] = get_value key, value
+          set_values key, value
         end
       end
     end
@@ -255,6 +265,9 @@ module CommandPost
 
 
 
+    def self.find(aggregate_id)
+      Aggregate.get_by_aggregate_id(self,aggregate_id)
+    end
 
 
     def self.listify(values)
@@ -365,7 +378,7 @@ module CommandPost
 
 
 
-    def self.get_objects_for_ll index_field_name, query_value
+    def self.get_objects_for_lt index_field_name, query_value
       Aggregate.get_for_indexed_single_value( self.get_sql_for_lt(index_field_name, query_value), query_value, self)
     end
 
@@ -375,11 +388,24 @@ module CommandPost
       Aggregate.get_for_indexed_single_value( self.get_sql_for_le(index_field_name, query_value) , query_value, self)
     end
 
-   
-   
+
+
     def data_errors
-      pp self.class.schema
-      JSON::Validator.fully_validate(JSON::Schema.add_indifferent_access(self.class.schema), @data,  :errors_as_objects => true, :validate_schema => true)
+      JSON::Validator.fully_validate(JSON.generate(self.class.schema), JSON.generate(@data),  :errors_as_objects => true, :validate_schema => true)
+    end
+
+
+
+    def self.command_create obj, user_id, description
+      raise "Type mismatch error! 'obj' was expected to be class #{self}, but was #{obj.class}." if self != obj.class
+      event = AggregateEvent.new 
+      event.aggregate_id = obj.aggregate_id
+      event.object = obj
+      event.aggregate_type =  obj.class
+      event.event_description = description
+      event.user_id = user_id 
+      event.publish
+      Aggregate.get_by_aggregate_id(self,obj.aggregate_id)
     end
   end
 end

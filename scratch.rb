@@ -1,61 +1,59 @@
+require_relative 'lib/command_post.rb'
 
+require 'securerandom'
 require 'json-schema'
 require 'pp'
+require 'json'
+require 'date'
+ 
 
+class Employer  < CommandPost::Persistence 
+  include CommandPost::Identity
 
+  def initialize
+    super
+  end
 
-
-
- - Validation still depends on hash keys as symbols. This is contrary to the most recent version's notes.
-
-
-
-"Make hashes indifferent to strings and symbols when using Ruby in the schema or the data"
-
-
-  $ gem list | grep json    =>  json-schema (2.1.3)
-
-
-
- 'age' is requried to be an integer
-
-
- schema = {
-        "type"        => "object",
-        "required"    => ["first_name", "last_name", "ssn", "age"],
-        "properties"  => {
-                            "first_name"    =>  { "type"          =>  "string"              },
-                            "last_name"     =>  { "type"          =>  "string"              }, 
-                            "ssn"           =>  { "type"          =>  "string"              }, 
-                            "age"           =>  { "type"          =>  "integer"             },
-                            "address"       =>  { "type"          =>  "object"              }
-                          }
+  def self.schema 
+    {
+      title: "Employer",
+      required: ["employer_name", "address", "employer_number" ],
+      type:  "object",
+      properties: 
+      {
+        employer_number:  { type:  "integer"},
+        employer_name:    { type:  "string" },
+        address:          { type:  "string" }
       }
+    }
+  end
+
+  def self.unique_lookup_value
+    :employer_number
+  end
+
+  def self.indexes
+    [:employer_number]
+  end
+end
 
 
-- validation properly enforced when data hash has string keys
+  # obj = Employer.load_from_hash({ :employer_number => 3000, :employer_name => 'abc co', :address => '2700 Trumbull'})
+  # new_obj = Employer.command_create(obj, 'user_id', 'description')
+  
+obj = Employer.new
+
+obj = Employer.employer_number_is(3000).first
+pp obj
+
+obj.address = "72422 campground"
 
 
-data = {'first_name' => 'Joseph', 'last_name' => 'Smith', 'age' => false, 'ssn' => '123456789',  }
-
-pp JSON::Validator.fully_validate(schema, data, :errors_as_objects => true, :validate_schema => true)
-
-
--> [{:schema=>
-    #<URI::Generic:0x007fa714a0c590 URL:b3506251-b386-5804-a591-d72a6b3e417d#>,
-   :fragment=>"#/age",
-   :message=>
-    "The property '#/age' of type FalseClass did not match the following type: integer in schema b3506251-b386-5804-a591-d72a6b3e417d#",
-   :failed_attribute=>"TypeV4"}]
+# pp obj.changes
 
 
 
-- validation does not catch invalid type for 'age' 
-
-data = {:first_name => 'Joseph', :last_name => 'Smith', :age => false, :ssn => '123456789',  }
-
-pp JSON::Validator.fully_validate(schema, data, :errors_as_objects => true, :validate_schema => true)
-
-=> []
 
 
+
+  

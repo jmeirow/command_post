@@ -9,20 +9,21 @@ class SomeClass  < CommandPost::Persistence
     super
   end
 
-
-
   def self.schema 
-    {    
-      "title"           => "SomeClass",
-      "required"        => ["first_name", "last_name", "ssn", "favorite_number", "birth_date" ],
-      "type"            => "object",
-      "properties" => {
-                        "first_name"          =>  { "type"          =>  "string"        },
-                        "last_name"           =>  { "type"          =>  "string"        },
-                        "ssn"                 =>  { "type"          =>  "string"        },
-                        "favorite_number"     =>  { "type"          =>  "integer"       },
-                        "birth_date"          =>  { "type"          =>  "string"        }
-                      },
+    {
+        title: "SomeClass",
+        required: ["first_name", "last_name", "birth_date", "favorite_number", "ssn" ],
+        type:  "object",
+        properties: {
+                           first_name:        { type: "string"        },
+                           last_name:         { type: "string"        },
+                           ssn:               { type: "string"        },
+
+                           birth_date:        { type: "string",       
+                                                class: "Date"         }, 
+
+                           favorite_number:   { type: "integer"       }
+                        }
     }
   end
 
@@ -31,7 +32,7 @@ class SomeClass  < CommandPost::Persistence
   end
 
   def self.indexes
-    []
+    [:ssn]
   end
 end
 
@@ -56,9 +57,10 @@ describe CommandPost::DataValidation do
     obj.last_name = 'Schmoe'
     obj.birth_date =  Date.new(1980,1,1) 
     obj.favorite_number = 3
-    obj.ssn = CommandPost::SequenceGenerator.misc
+    obj.ssn = CommandPost::SequenceGenerator.misc.to_s
 
-    JSON::Validator.validate(SomeClass.schema, obj.to_h,  :validate_schema => true).must_equal true
+    (obj.data_errors.length == 0 ).must_equal true
+
 
   end
 
@@ -70,8 +72,9 @@ describe CommandPost::DataValidation do
     obj.last_name = 'Schmoe'
     obj.birth_date =  Date.new(1980,1,1) 
     # ===>  missing      obj.favorite_number = 3      
-    obj.ssn = CommandPost::SequenceGenerator.misc
-    JSON::Validator.validate(SomeClass.schema,   obj.to_h,  :validate_schema => true).must_equal false
+    obj.ssn = CommandPost::SequenceGenerator.misc.to_s
+    (obj.data_errors.length == 0 ).must_equal false
+
   end
 
   it 'should not be valid if a type is incorrect ' do
@@ -79,50 +82,74 @@ describe CommandPost::DataValidation do
     obj.first_name = 'Joe'
     obj.last_name = 'Schmoe'
     obj.birth_date =  Date.new(1980,1,1) 
-    obj.favorite_number = "x"  # <---- should be Fixnum      
+    obj.favorite_number = "3"  # <---- should be Fixnum      
+    obj.ssn = CommandPost::SequenceGenerator.misc.to_s
 
-
-    obj.ssn = CommandPost::SequenceGenerator.misc
-
-    JSON::Validator.validate(SomeClass.schema,  JSON::Schema.add_indifferent_access(obj.to_h),  :validate_schema => true).must_equal false
+    (obj.data_errors.length == 0 ).must_equal false
   end
 
 
-  schema = {
-        "title"           => "SomeClass",
-        "required"        => ["first_name", "last_name", "birth_date", "favorite_number", "ssn" ],
-        "type"            => "object",
-        "properties" => {
-                          "first_name"          =>  { "type"          =>  "string"        },
-                          "last_name"           =>  { "type"          =>  "string"        },
-                          "ssn"                 =>  { "type"          =>  "string"        },
-                        
-                          "birth_date"          =>  { "type"          =>  "string" , 
-                                                      "class"         =>  "Date"          },
-                          "favorite_number"     =>  { "type"          =>  "integer"       }
-                        }
-    }
 
-    # data = {'first_name' => 'joe', 'last_name' => 'schmoe', 'ssn' =>'321564987', 'favorite_number' => 3, 'birth_date' => "1/1/2014"      }
+  it 'should be able to get the native data type out of the object after a save to the database' do 
+
+    ssn =  CommandPost::SequenceGenerator.misc.to_s
+    data = { first_name: 'joe', last_name: 'schmoe', ssn: ssn, favorite_number: 3, birth_date:  Date.today  }
+
+
+    obj = SomeClass.load_from_hash data
+
+ 
+    event = CommandPost::AggregateEvent.new 
+    event.aggregate_id = obj.aggregate_id
+    event.object = obj
+    event.aggregate_type =  obj.class
+    event.event_description = 'hired'
+    event.user_id = 'test' 
+    event.publish
+
+    result = SomeClass.find(obj.aggregate_id)
+ 
+    result.favorite_number.must_equal 3
+ 
+
+  end
+
+
+  it 'should be able to get the object (Date) data type out of the object after a save to the database' do 
+
+    ssn =  CommandPost::SequenceGenerator.misc.to_s
+    data = { first_name: 'joe', last_name: 'schmoe', ssn: ssn, favorite_number: 3, birth_date:  Date.today  }
+
+
+    obj = SomeClass.load_from_hash data
+
+ 
+    event = CommandPost::AggregateEvent.new 
+    event.aggregate_id = obj.aggregate_id
+    event.object = obj
+    event.aggregate_type =  obj.class
+    event.event_description = 'hired'
+    event.user_id = 'test' 
+    event.publish
+
+    result = SomeClass.find(obj.aggregate_id)
+ 
+    result.birth_date = Date.today
+ 
+
+  end
+
+
+
+
+
+end
+
+
+
 
  
 
 
 
-    params = ['first_name' => 'Joe' , 'last_name' => 'Schmoe',   'birth_date' =>  Date.new(1980,1,1) , 'favorite_number' => 3]
-    obj = SomeClass.load_from_hash params
-    event = CommandPost::AggregateEvent.new 
-    event.aggregate_id = obj.aggregate_id
-    event.object = obj
-    event.aggregate_type =  SomeClass
-    event.event_description = 'hired'
-    event.user_id = 'test' 
-    event.publish
-
-    result = CommandPost::Aggregate.get_by_aggregate_id(SomeClass,obj.aggregate_id)
-
-    pp result  
-
-
-
-end
+ 
