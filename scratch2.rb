@@ -5,7 +5,14 @@ require 'json-schema'
 require 'pp'
 require 'json'
 require 'date'
- 
+require 'faker'
+require 'money'
+
+# $DB['delete from aggregates'].delete
+# $DB['delete from aggregate_events'].delete
+# $DB['delete from aggregate_index_decimals'].delete
+# $DB['delete from aggregate_index_integers'].delete
+# $DB['delete from aggregate_index_strings'].delete
 
 class TestXXXPerson < CommandPost::Persistence 
   include CommandPost::Identity
@@ -31,29 +38,29 @@ class TestXXXPerson < CommandPost::Persistence
   end
 
   def self.indexes
-    [:favorite_number, :ssn, :hourly_rate]
+    [:favorite_number, :ssn, :hourly_rate, :state]
   end
 end
 
  
 
-TestXXXPerson.new 
+# 500.times do
+#   params = Hash.new  # like a web request... 
+#   params['first_name']  = Faker::Name.first_name                                           #hash key is a string to mimic a web post/put
+#   params['last_name']   = Faker::Name.last_name                                            #hash key is a string to mimic a web post/put
+#   params['ssn']         = "%09d" %  CommandPost::SequenceGenerator.misc                    #hash key is a string to mimic a web post/put
+#   params['favorite_number'] = rand(5)
+#   params['state'] = Faker::Address.state_abbr    
+#   params['hourly_rate'] = (Money.new(1000,'USD').to_f * rand(5.0))
 
 
 
-
-# params = TestXXXPerson.find(63434052).to_h
-# params[:state] = "MI"
-# new_person = TestXXXPerson.load_from_hash params
-# TestXXXPerson.put new_person , "Changed value of 'state' because person relocated.", "smithmr"
-
-
-pp  CommandPost::AggregateEvent.get_history_by_aggregate_id(63434052)
+post '/add_new_person:person_data'  do
+  new_person = TestXXXPerson.load_from_hash params[:person_data]
+  TestXXXPerson.put new_person , "hired new employee.", "smithmr"
+end 
 
 
-
-
-# person = TestXXXPerson.find(63434052)
 
 
 

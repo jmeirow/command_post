@@ -1,3 +1,5 @@
+require 'pry'
+require 'pry-debugger'
 
 
 module CommandPost
@@ -23,39 +25,17 @@ module CommandPost
     end
 
 
-    def compute_changes objects 
-      raise "method 'changes' requires one parameter, which must be a Hash." unless objects.class == Hash
-      raise "objects hash execpted key :old, which was not found. " unless objects.keys.include?(:old)
-      raise "objects hash execpted key :new, which was not found. " unless objects.keys.include?(:new)
-      raise "objects are not of same type."  unless objects[:old].class == objects[:new].class 
-      old_obj = objects[:old].to_h 
-      new_obj = objects[:new].to_h
-
-      chgs = Hash.new 
-
-      new_obj.keys.each do |key|
-        chgs[key] = new_obj[key] unless old_obj.keys.include?(key) && old_obj[key] == new_obj[key]
-      end
-
-      chgs 
-    end
-
-
-
-    def get_changes object
-      chgs = Hash.new
-      chgs[:old] = object.class.find(object.aggregate_id)
-      chgs[:new] = object 
-      compute_changes chgs 
-    end
-
     def publish 
+
       if object.data_errors.length > 0
         raise object.data_errors.join(' ')
       end
 
+      #binding.pry
+
       $DB.transaction do 
         changes =  get_changes(object)
+        #binding.pry
         if changes.keys.include?(:aggregate_info) && changes[:aggregate_info][:version] != object.aggregate_info[:version]
           raise "version has changed, RabbitMQ goes here"
         else
@@ -63,10 +43,40 @@ module CommandPost
         end
       end
     end
+
+
+
+    def compute_changes objects 
+      raise "method 'changes' requires one parameter, which must be a Hash." unless objects.class == Hash
+      raise "objects hash execpted key :old, which was not found. " unless objects.keys.include?(:old)
+      raise "objects hash execpted key :new, which was not found. " unless objects.keys.include?(:new)
+      raise "objects are not of same type."  unless objects[:old].class == objects[:new].class 
+      
+      old_obj = objects[:old].to_h 
+      new_obj = objects[:new].to_h
+      chgs = Hash.new 
+
+      new_obj.keys.each do |key|
+        chgs[key] = new_obj[key] unless old_obj.keys.include?(key) && old_obj[key] == new_obj[key]
+      end
+      binding.pry
+      chgs 
+    end
+
+
+
+    def get_changes object
+      chgs = { old: object.class.find(object.aggregate_id),  new: object }
+      compute_changes chgs 
+    end
+
+
     
     def self.publish event 
       event.publish
     end
+
+
 
     def self.get_history_by_aggregate_id aggregate_id 
       hash = Hash.new
@@ -92,11 +102,11 @@ module CommandPost
 
 
 
-
-    private
+private
     def save_event change 
 
       json = JSON.generate(change)
+      #binding.pry
       @@prepared_statement.call(
         :aggregate_type => @aggregate_type.to_s, :aggregate_id => @aggregate_id, :content => json, :transaction_id => @transaction_id, :transacted => @transacted, :event_description => @event_description, :user_id => @user_id )
       Aggregate.replace  get_current_object 
@@ -105,7 +115,6 @@ module CommandPost
 
 
     def get_current_object 
-
       version = 0
       accumulated_object = Hash.new 
       $DB.fetch("SELECT * FROM aggregate_events WHERE aggregate_id = ? order by transacted", @aggregate_id) do |row|

@@ -32,9 +32,7 @@ module CommandPost
 
     def set_data data_hash
       @data = data_hash
-      if @aggregate_info_set == false 
-        @aggregate_info_set = true
-      end
+      @aggregate_info_set = true
     end
 
 
@@ -52,6 +50,23 @@ module CommandPost
 
 
     def to_h 
+      @data.keys.each do |key|
+        if @data[key].is_a?(CommandPost::Identity)
+          @data[key] = @data[key].to_h[:aggregate_info]
+        elsif @data[key].is_a?(CommandPost::Persistence)
+          @data[key] = @data[key].to_h
+        elsif @data[key].class == Array 
+          @data[key].each do |current_obj|
+            if current_obj.is_a?(CommandPost::Identity)
+              @data[key].delete(current_object)
+              @data[key] << current_object.to_h[:aggregate_info]
+            elsif current_obj.is_a?(CommandPost::Identity)
+              @data[key].delete(current_object)
+              @data[key] << current_object.to_h
+            end
+          end
+        end
+      end
       @data
     end
 
@@ -60,7 +75,6 @@ module CommandPost
     def self.all
       Aggregate.where(self)
     end
-
 
 
 
@@ -136,9 +150,6 @@ module CommandPost
 
 
 
-
-
-
     def initialize_schema_and_indexes
       self.class.init_schema HashUtil.symbolize_keys(self.class.schema)[:properties]
       self.class.init_indexes self.class.indexes if self.is_a?CommandPost::Identity  
@@ -160,17 +171,12 @@ module CommandPost
     end
 
 
+
     def getter key 
-      if schema_fields[key].keys.include?:class 
-        if schema_fields[key][:class] == 'Date'
-          Date._strptime("%Y-%m-%d", @data[key])
-        else 
-          @data[key]
-        end
-      else
-        @data[key]
-      end
+      @data[key]
     end
+
+
 
     def create_getters
       schema_fields.keys.each do |key|
@@ -199,23 +205,27 @@ module CommandPost
     end
 
 
-    def get_value key,value
-      if value.is_a?(CommandPost::Identity) == true 
-        value.aggregate_pointer
-      else
-        value 
-      end
-    end
+
+    # def get_value key,value
+    #   if value.is_a?(CommandPost::Identity) 
+    #     value.aggregate_pointer
+    #   elsif value.is_a?(CommandPost::Persistence)
+    #     value.to_h
+    #   else
+    #     value 
+    #   end
+    # end
+
 
 
     def create_setters
       schema_fields.keys.each do |key|
         self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
-
-          @data[key] = get_value key, value
+          @data[key] = value #get_value key, value
         end
       end
     end
+
 
 
     def create_index_access_methods
@@ -330,7 +340,6 @@ module CommandPost
 
 
     def self.compute_index_table_name(value)
-      raise "WTF!!!" if value.class == Symbol
       return 'AGGREGATE_INDEX_DECIMALS' if (value.is_a?(Float))
       return 'AGGREGATE_INDEX_INTEGERS' if (value.is_a?(Fixnum))
       return 'AGGREGATE_INDEX_STRINGS' if (value.is_a?(String))

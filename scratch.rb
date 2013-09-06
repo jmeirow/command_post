@@ -7,13 +7,6 @@
   require 'date'
   require 'money'     
 
-
-  # $DB['delete from aggregates'].delete
-  # $DB['delete from aggregate_events'].delete
-  # $DB['delete from aggregate_index_decimals'].delete
-  # $DB['delete from aggregate_index_integers'].delete
-  # $DB['delete from aggregate_index_strings'].delete
-
   class Employer  < CommandPost::Persistence 
     include CommandPost::Identity
 
@@ -39,6 +32,7 @@
       [:employer_number]
     end
   end
+
 
   class ParticipationAgreement  < CommandPost::Persistence 
     include CommandPost::Identity
@@ -123,70 +117,87 @@
 
 
 
+  
+ 
+  $DB['delete from aggregates'].delete
+  $DB['delete from aggregate_events'].delete
+  $DB['delete from aggregate_index_decimals'].delete
+  $DB['delete from aggregate_index_integers'].delete
+  $DB['delete from aggregate_index_strings'].delete
 
-  # employer = Employer.load_from_hash({ :employer_number => 3000, :employer_name => 'abc co', :address => '2700 Trumbull'})
-  # Employer.put employer, 'added new employer to system', 'user_id'
+
+  employer = Employer.load_from_hash({ :employer_number => 3000, :employer_name => 'abc co', :address => '2700 Trumbull'})
+  Employer.put employer, 'added new employer to system', 'user_id'
               
 
 
-  # rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(11000).to_f })
-  # rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(15000).to_f })
-  # rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(19000).to_f })
-  # plan1 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date: Date.new(2008,4,1), expiration_date:  Date.new(2009,3,31), tier_type: 'three_tier', plan:  "274", rates:   [rate1,rate2,rate3] })
+  rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(11000).to_f })
+  rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(15000).to_f })
+  rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(19000).to_f })
+  plan1 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date: Date.new(2008,4,1), expiration_date:  Date.new(2009,3,31), tier_type: 'three_tier', plan:  "274", rates:   [rate1,rate2,rate3] })
 
 
-  # rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(12000).to_f } )
-  # rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(16000).to_f } )
-  # rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(22000).to_f } )
-  # plan2 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:   Date.new(2009,4,1), expiration_date:  Date.new(2010,3,31), tier_type:  'three_tier', plan:   "274", rates: [rate1,rate2,rate3] })
+  rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(12000).to_f } )
+  rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(16000).to_f } )
+  rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(22000).to_f } )
+  plan2 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:   Date.new(2009,4,1), expiration_date:  Date.new(2010,3,31), tier_type:  'three_tier', plan:   "274", rates: [rate1,rate2,rate3] })
 
 
-  # rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(13000).to_f }   )
-  # rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(17000).to_f }   )
-  # rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(21000).to_f }   )
-  # plan3 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:  Date.new(2010,4,1), expiration_date:  Date.new(2011,9,30), tier_type:  'three_tier', plan:   "171", rates: [rate1,rate2,rate3] })
+  rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(13000).to_f }   )
+  rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(17000).to_f }   )
+  rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(21000).to_f }   )
+  plan3 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:  Date.new(2010,4,1), expiration_date:  Date.new(2011,9,30), tier_type:  'three_tier', plan:   "171", rates: [rate1,rate2,rate3] })
 
 
-  # pa1 = ParticipationAgreement.load_from_hash({ employer_aggregate_id: employer.aggregate_id, effective_date:  Date.new(2008,4,1), expiration_date: Date.new(2011,9,30), plans: [plan1,plan2,plan3]})
+  pa1 = ParticipationAgreement.load_from_hash({ employer_aggregate_id: employer.aggregate_id, effective_date:  Date.new(2008,4,1), expiration_date: Date.new(2011,9,30), plans: [plan1,plan2,plan3]})
 
 
 
 
-  # rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(21000).to_f })
-  # rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(25000).to_f })
-  # rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(29000).to_f })
-  # plan1 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date: Date.new(2008,4,1), expiration_date:  Date.new(2009,3,31), tier_type: 'three_tier', plan:  "100", rates:   [rate1,rate2,rate3] })
 
 
-  # rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(22000).to_f } )
-  # rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(26000).to_f } )
-  # rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(30000).to_f } )
-  # plan2 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:   Date.new(2009,4,1), expiration_date:  Date.new(2010,3,31), tier_type:  'three_tier', plan:   "100", rates: [rate1,rate2,rate3] })
+
+  rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(21000).to_f })
+  rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(25000).to_f })
+  rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(29000).to_f })
+  plan1 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date: Date.new(2008,4,1), expiration_date:  Date.new(2009,3,31), tier_type: 'three_tier', plan:  "100", rates:   [rate1,rate2,rate3] })
 
 
-  # rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(23000).to_f }   )
-  # rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(26000).to_f }   )
-  # rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(31000).to_f }   )
-  # plan3 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:  Date.new(2010,4,1), expiration_date:  Date.new(2011,9,30), tier_type:  'three_tier', plan:   "100", rates: [rate1,rate2,rate3] })
+  rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(22000).to_f } )
+  rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(26000).to_f } )
+  rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(30000).to_f } )
+  plan2 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:   Date.new(2009,4,1), expiration_date:  Date.new(2010,3,31), tier_type:  'three_tier', plan:   "100", rates: [rate1,rate2,rate3] })
 
 
-  # pa2 = ParticipationAgreement.load_from_hash({ employer_aggregate_id: employer.aggregate_id, effective_date:  Date.new(2008,4,1), expiration_date: Date.new(2011,9,30), plans: [plan1,plan2,plan3] } )
+  rate1 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'single', rate_amount: Money.new(23000).to_f }   )
+  rate2 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'middle', rate_amount: Money.new(26000).to_f }   )
+  rate3 = ParticipationAgreementRate.load_from_hash({ published_rate?: 'true', rate_type: 'family', rate_amount: Money.new(31000).to_f }   )
+  plan3 = ParticipationAgreementPlan.load_from_hash({id: SecureRandom.uuid, effective_date:  Date.new(2010,4,1), expiration_date:  Date.new(2011,9,30), tier_type:  'three_tier', plan:   "100", rates: [rate1,rate2,rate3] })
 
 
-  # ParticipationAgreement.put pa1, 'Added new PA', 'smithmr'
-  # ParticipationAgreement.put pa2, 'Added new PA', 'smithmr'
+  pa2 = ParticipationAgreement.load_from_hash({ employer_aggregate_id: employer.aggregate_id, effective_date:  Date.new(2008,4,1), expiration_date: Date.new(2011,9,30), plans: [plan1,plan2,plan3] } )
+
+
+  ParticipationAgreement.put pa1, 'Added new PA', 'smithmr'
+  ParticipationAgreement.put pa2, 'Added new PA', 'smithmr'
     
 
+  
+  # Employer.new
+  # ParticipationAgreement.new
+  # ParticipationAgreementRate.new 
+  # ParticipationAgreementPlan.new 
 
-
-  # employer = Employer.employer_number_eq(3000).first
+   
   
 
-  pa = ParticipationAgreement.find(63444167)
-
-  puts pa.plans.first.plan 
   
-  # employer_agreements = EmployerParticipationAgreements.new employer.aggregate_id
+
+
+
+
+
+
 
 
 

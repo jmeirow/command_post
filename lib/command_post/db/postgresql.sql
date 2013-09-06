@@ -16,9 +16,6 @@ CREATE TABLE aggregate_events (
 
 CREATE INDEX aggregate_events_idx ON aggregate_events(aggregate_id,aggregate_type);
 
-
-
-
   
 CREATE TABLE aggregates (
 
