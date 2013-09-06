@@ -13,7 +13,7 @@ module CommandPost
       set_ivars
       initialize_schema_and_indexes
       create_methods
-      Command.auto_generate self.class
+      #Command.auto_generate self.class
     end
 
 
@@ -129,7 +129,7 @@ module CommandPost
 
 
     def set_class_collections
-      @@fields ||= Hash.new
+      @@fields  ||= Hash.new
       @@indexes ||= Hash.new
       @@methods ||= Hash.new 
     end
@@ -141,7 +141,7 @@ module CommandPost
 
     def initialize_schema_and_indexes
       self.class.init_schema HashUtil.symbolize_keys(self.class.schema)[:properties]
-      self.class.init_indexes self.class.indexes
+      self.class.init_indexes self.class.indexes if self.is_a?CommandPost::Identity  
     end
 
 
@@ -149,7 +149,7 @@ module CommandPost
     def create_methods
       return if @@methods[self.class] && @@methods[self.class] == true
       create_data_access_methods 
-      create_index_access_methods
+      create_index_access_methods if self.is_a?CommandPost::Identity  
     end
 
 
@@ -160,6 +160,17 @@ module CommandPost
     end
 
 
+    def getter key 
+      if schema_fields[key].keys.include?:class 
+        if schema_fields[key][:class] == 'Date'
+          Date._strptime("%Y-%m-%d", @data[key])
+        else 
+          @data[key]
+        end
+      else
+        @data[key]
+      end
+    end
 
     def create_getters
       schema_fields.keys.each do |key|
@@ -167,7 +178,7 @@ module CommandPost
           create_identity_getter key
         else
           self.class.send(:define_method, key) do 
-            @data[key]
+            getter key
           end
         end
       end
@@ -382,21 +393,7 @@ module CommandPost
     end
 
 
-    def self.changes objects 
-      raise "method 'changes' requires one parameter, which must be a Hash." unless objects.class == Hash
-      raise "objects hash execpted key :old, which was not found. " unless objects.keys.include?(:old)
-      raise "objects hash execpted key :new, which was not found. " unless objects.keys.include?(:new)
-      raise "objects are not of same type."  unless objects[:old].class == objects[:new].class 
-      old_obj = objects[:old].to_h 
-      new_obj = objects[:new].to_h
 
-      chgs = Hash.new 
-
-      old_obj.keys.each do |key|
-        chgs[key] = new_obj[key] unless new_obj.keys.include?(key) && old_obj[key] == new_obj[key]
-      end
-      chgs 
-    end
 
   end
 

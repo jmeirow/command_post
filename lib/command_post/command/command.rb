@@ -13,8 +13,8 @@ module CommandPost
       @@commands ||= Hash.new 
       return if @@commands.keys.include? persistent_class 
       @@commands[persistent_class] = []
-      self.create_field_correction_commands persistent_class
-      self.create_aggregate_creation_commands persistent_class
+      self.create_field_correction_commands persistent_class if persistent_class.is_a?CommandPost::Identity  
+      self.create_aggregate_creation_commands persistent_class if persistent_class.is_a?CommandPost::Identity  
     end 
 
 
