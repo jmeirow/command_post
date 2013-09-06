@@ -42,7 +42,6 @@ module CommandPost
     def set_ivars
       @aggregate_info_set = false
       @data = Hash.new
-      @old_data = Hash.new
     end
 
 
@@ -50,17 +49,6 @@ module CommandPost
     def aggregate_type
       self.class      
     end
-
-    def changes
-      chgs = Hash.new
-      @old_data.keys.each do |key|
-          chgs[key] = {  :old_value =>@old_data[key] , :new_value => @data[key] }
-        end
-      end
-      chgs
-    end 
-
-
 
 
     def to_h 
@@ -209,28 +197,11 @@ module CommandPost
     end
 
 
-    def changes
-      chgs = Hash.new 
-      @data.keys.each do |key|
-        if @data[key][:original_value]
-
-          chgs[key] = {:old => @data[key][:original_value], :new => @data[:key]}
-        end
-      end
-      chgs 
-    end
-
-    def set_values key, value
-      old_value = @data[key]
-      new_value = get_value key, value
-      @old_data[key] = old_value if (old_value != new_value)
-      @data[key] = get_value key, value 
-    end
-
     def create_setters
       schema_fields.keys.each do |key|
         self.class.send(:define_method, "#{key.to_s}=".to_sym) do |value| 
-          set_values key, value
+
+          @data[key] = get_value key, value
         end
       end
     end
@@ -266,6 +237,7 @@ module CommandPost
 
 
     def self.find(aggregate_id)
+
       Aggregate.get_by_aggregate_id(self,aggregate_id)
     end
 
@@ -282,9 +254,9 @@ module CommandPost
       sql = "
       SELECT            A.* 
       FROM              aggregates A 
-      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      INNER JOIN        #{self.compute_index_table_name(query_values.first)} I on A.aggregate_id = I.aggregate_id 
       WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
-      AND               #{self.compute_index_column_name(query_values.first)} in (  #{list}  ) "
+      AND               index_value in (  #{list}  ) "
       sql
     end
 
@@ -294,9 +266,9 @@ module CommandPost
       "
       SELECT            A.* 
       FROM              aggregates A 
-      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      INNER JOIN        #{self.compute_index_table_name(query_value)} I on A.aggregate_id = I.aggregate_id 
       WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
-      AND               #{self.compute_index_column_name(query_value)} = ? "
+      AND               index_value = ? "
     end
 
 
@@ -305,9 +277,9 @@ module CommandPost
       "
       SELECT            A.* 
       FROM              aggregates A 
-      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      INNER JOIN        #{self.compute_index_table_name(query_value)} I on A.aggregate_id = I.aggregate_id 
       WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
-      AND               #{self.compute_index_column_name(query_value)} > ? "
+      AND               index_value > ? "
     end
 
 
@@ -316,9 +288,9 @@ module CommandPost
       "
       SELECT            A.* 
       FROM              aggregates A 
-      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      INNER JOIN        #{self.compute_index_table_name(query_value)} I on A.aggregate_id = I.aggregate_id 
       WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
-      AND               #{self.compute_index_column_name(query_value)} >= ? "
+      AND               index_value >= ? "
     end
 
 
@@ -327,9 +299,9 @@ module CommandPost
       "
       SELECT            A.* 
       FROM              aggregates A 
-      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      INNER JOIN        #{self.compute_index_table_name(query_value)} I on A.aggregate_id = I.aggregate_id 
       WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
-      AND               #{self.compute_index_column_name(query_value)} < ? "
+      AND               index_value < ? "
     end
 
 
@@ -338,18 +310,20 @@ module CommandPost
       "
       SELECT            A.* 
       FROM              aggregates A 
-      INNER JOIN        aggregate_indexes I on A.aggregate_id = I.aggregate_id 
+      INNER JOIN        #{self.compute_index_table_name(query_value)} I on A.aggregate_id = I.aggregate_id 
       WHERE             index_field = '#{self.to_s}.#{index_field_name}' 
-      AND               #{self.compute_index_column_name(query_value)} <= ? "
+      AND               index_value <= ? "
     end
 
 
 
 
-    def self.compute_index_column_name(field)
-      return 'INDEX_VALUE_INTEGER' if field.is_a? Fixnum
-      return 'INDEX_VALUE_DECIMAL' if field.is_a? BigDecimal
-      'INDEX_VALUE_TEXT'
+    def self.compute_index_table_name(value)
+      raise "WTF!!!" if value.class == Symbol
+      return 'AGGREGATE_INDEX_DECIMALS' if (value.is_a?(Float))
+      return 'AGGREGATE_INDEX_INTEGERS' if (value.is_a?(Fixnum))
+      return 'AGGREGATE_INDEX_STRINGS' if (value.is_a?(String))
+      'AGGREGATE_INDEX_STRINGS'
     end
 
 
@@ -396,7 +370,7 @@ module CommandPost
 
 
 
-    def self.command_create obj, user_id, description
+    def self.put obj, description, user_id
       raise "Type mismatch error! 'obj' was expected to be class #{self}, but was #{obj.class}." if self != obj.class
       event = AggregateEvent.new 
       event.aggregate_id = obj.aggregate_id
@@ -405,7 +379,25 @@ module CommandPost
       event.event_description = description
       event.user_id = user_id 
       event.publish
-      Aggregate.get_by_aggregate_id(self,obj.aggregate_id)
     end
+
+
+    def self.changes objects 
+      raise "method 'changes' requires one parameter, which must be a Hash." unless objects.class == Hash
+      raise "objects hash execpted key :old, which was not found. " unless objects.keys.include?(:old)
+      raise "objects hash execpted key :new, which was not found. " unless objects.keys.include?(:new)
+      raise "objects are not of same type."  unless objects[:old].class == objects[:new].class 
+      old_obj = objects[:old].to_h 
+      new_obj = objects[:new].to_h
+
+      chgs = Hash.new 
+
+      old_obj.keys.each do |key|
+        chgs[key] = new_obj[key] unless new_obj.keys.include?(key) && old_obj[key] == new_obj[key]
+      end
+      chgs 
+    end
+
   end
+
 end

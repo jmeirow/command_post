@@ -1,6 +1,10 @@
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
-class Test001Person < CommandPost::Persistence 
+ 
+
+
+
+class Test002Person < CommandPost::Persistence 
   include CommandPost::Identity
 
   def initialize
@@ -8,7 +12,7 @@ class Test001Person < CommandPost::Persistence
   end
   def self.schema 
     {
-        "title"           => "Test001Person",
+        "title"           => "Test002Person",
         "required"        => ["first_name", "last_name", "ssn"],
         "type"            => "object",
         "properties" => {
@@ -18,21 +22,19 @@ class Test001Person < CommandPost::Persistence
                            
                         },
       }
-  end 
-
-  def self.unique_lookup_value
-    :ssn
+    
   end
 
+ 
+
   def self.indexes
-    []
+    [:ssn]
   end
 end
 
 
-
 describe CommandPost::Identity do 
-  it 'it should return use the SSN as the lookup value' do 
+  it 'should produce and return a checksum when declaring the lookup to be :checksum in the schema and the checksum should be able to find the aggregate by value (checksum)'  do 
 
     params = Hash.new  # like a web request... 
 
@@ -46,15 +48,8 @@ describe CommandPost::Identity do
     # 'handle' method of the CommandXXXXXX class.
     #----------------------------------------------------------------
 
-    object = Test001Person.load_from_hash  params
-    puts "OBJECT IS NIL #{'=' * 80}" if object.nil?
-    event = CommandPost::AggregateEvent.new 
-    event.aggregate_id = object.aggregate_id
-    event.object = object
-    event.aggregate_type =  Test001Person
-    event.event_description = 'hired'
-    event.user_id = 'test' 
-    event.publish
+    object = Test002Person.load_from_hash  params
+    Test002Person.put object, 'hired', 'smithmr'
 
 
     #----------------------------------------------------------------
@@ -64,8 +59,8 @@ describe CommandPost::Identity do
     #----------------------------------------------------------------
 
 
-    saved_person = CommandPost::Aggregate.get_by_aggregate_id Test001Person, event.aggregate_id 
-    saved_person2 = CommandPost::Aggregate.get_aggregate_by_lookup_value Test001Person,  saved_person.aggregate_lookup_value
+    saved_person = Test002Person.find(object.aggregate_id)
+    saved_person2 = Test002Person.ssn_eq(saved_person.ssn).first
 
     
     params['first_name'].must_equal saved_person.first_name
@@ -76,16 +71,33 @@ describe CommandPost::Identity do
     params['last_name'].must_equal saved_person2.last_name
     params['ssn'].must_equal saved_person2.ssn
   end
-
-
-
-
-
-
-
-
-
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

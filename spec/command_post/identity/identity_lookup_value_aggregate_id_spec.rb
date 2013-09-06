@@ -1,5 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
+ 
+
+
 class Test003Person < CommandPost::Persistence 
   include CommandPost::Identity
 
@@ -20,12 +23,10 @@ class Test003Person < CommandPost::Persistence
       }
   end
 
-  def self.unique_lookup_value 
-    :aggregate_id 
-  end
+ 
 
   def self.indexes
-    []
+    [:ssn]
   end
 end
 
@@ -45,23 +46,17 @@ describe CommandPost::Identity do
     #----------------------------------------------------------------
 
     object = Test003Person.load_from_hash params
-    event = CommandPost::AggregateEvent.new 
-    event.aggregate_id = object.aggregate_id
-    event.object = object
-    event.aggregate_type =  Test003Person
-    event.event_description = 'hired'
-    event.user_id = 'test' 
-    event.publish
+    Test003Person.put object, 'hired', 'smithmr'
 
 
     #----------------------------------------------------------------
-    # Retrieve the object by both aggregate_id and aggregate_lookup_value
+    # Retrieve the object by both aggregate_id and by indexed field.
     # Both ways should retrieve the same object and the fields of both
     # should match the original values used to create the object.
     #----------------------------------------------------------------
 
-    saved_person = CommandPost::Aggregate.get_by_aggregate_id Test003Person, event.aggregate_id 
-    saved_person2 = CommandPost::Aggregate.get_aggregate_by_lookup_value Test003Person,  saved_person.aggregate_lookup_value
+    saved_person = Test003Person.find(object.aggregate_id)
+    saved_person2 = Test003Person.ssn_eq(saved_person.ssn).first
 
     
     params['first_name'].must_equal saved_person.first_name

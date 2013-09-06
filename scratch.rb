@@ -28,9 +28,7 @@ class Employer  < CommandPost::Persistence
     }
   end
 
-  def self.unique_lookup_value
-    :employer_number
-  end
+
 
   def self.indexes
     [:employer_number]
@@ -38,18 +36,21 @@ class Employer  < CommandPost::Persistence
 end
 
 
-  # obj = Employer.load_from_hash({ :employer_number => 3000, :employer_name => 'abc co', :address => '2700 Trumbull'})
-  # new_obj = Employer.command_create(obj, 'user_id', 'description')
+# obj = Employer.load_from_hash({ :employer_number => 3000, :employer_name => 'abc co', :address => '2700 Trumbull'})
+# new_obj = Employer.command_create(obj, 'user_id', 'description')
+
+Employer.new
   
-obj = Employer.new
+objects = Hash.new
 
-obj = Employer.employer_number_is(3000).first
-pp obj
+objects[:old] = Employer.employer_number_is(3000).first
+objects[:new] = Employer.employer_number_is(3000).first
 
-obj.address = "72422 campground"
+objects[:new].address = "72422 Campground"
+
+pp Employer.changes(objects)
 
 
-# pp obj.changes
 
 
 

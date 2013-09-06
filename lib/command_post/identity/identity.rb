@@ -6,10 +6,7 @@ module CommandPost
   module Identity
 
  
-    def aggregate_lookup_value
-      field = self.class.unique_lookup_value #(schema_fields[:lookup][:use])
-      (self.send field.to_sym).to_s
-    end
+ 
 
     def aggregate_id 
 

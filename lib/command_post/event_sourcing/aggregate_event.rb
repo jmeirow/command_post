@@ -23,17 +23,10 @@ module CommandPost
     end
 
     def publish 
-      if changes
-        save_event changes
-      elsif object
-        if object.data_errors.length > 0
-          raise object.data_errors.join(' ')
-        end
-        @aggregate_lookup_value = object.aggregate_lookup_value
-        save_event object.to_h
-      else
-        raise 'Event has no state to publish.'
+      if object.data_errors.length > 0
+        raise object.data_errors.join(' ')
       end
+      save_event object.to_h
     end
     
     def self.publish event 
@@ -75,7 +68,7 @@ module CommandPost
                             :event_description => @event_description,
                             :user_id => @user_id
                               )
-      Aggregate.replace  get_current_object, @aggregate_lookup_value
+      Aggregate.replace  get_current_object 
     end
 
 
