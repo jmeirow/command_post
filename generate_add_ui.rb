@@ -14,4 +14,24 @@ get '/lookup:ssn'
   erb :display
 end
 
+__END__
+
+
+
+
+
+template :inquiry  do 
+
+  <form>
+
+
+  </form>
+
+
+end
+
+
+
+
+
 
