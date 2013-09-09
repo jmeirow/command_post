@@ -33,8 +33,7 @@ class TestXXXPerson < CommandPost::Persistence
                           favorite_number:      { type:            "integer"       },
                           hourly_rate:          { type:            "number"        }
                         },
-      }
-
+    }
   end
 
   def self.indexes

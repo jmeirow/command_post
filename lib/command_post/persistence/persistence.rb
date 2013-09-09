@@ -6,6 +6,23 @@ require_relative './auto_load'
 
 module CommandPost
 
+
+  class HashWrapper 
+    def initialize hash 
+      @hash = hash 
+    end
+
+    def method missing name, *args
+      if @hash.keys.include? name 
+        return @hash[:name]
+      else 
+        super 
+      end
+    end
+  end
+
+ 
+
   class Persistence 
 
     def initialize 
@@ -161,15 +178,7 @@ module CommandPost
 
 
     def getter key 
-      if schema_fields[key].keys.include?:class 
-        if schema_fields[key][:class] == 'Date'
-          Date._strptime("%Y-%m-%d", @data[key])
-        else 
-          @data[key]
-        end
-      else
-        @data[key]
-      end
+      @data[key]
     end
 
     def create_getters
