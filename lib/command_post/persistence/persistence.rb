@@ -6,6 +6,23 @@ require_relative './auto_load'
 
 module CommandPost
 
+
+  class HashWrapper 
+    def initialize hash 
+      @hash = hash 
+    end
+
+    def method missing name, *args
+      if @hash.keys.include? name 
+        return @hash[:name]
+      else 
+        super 
+      end
+    end
+  end
+
+ 
+
   class Persistence 
 
     def initialize 
