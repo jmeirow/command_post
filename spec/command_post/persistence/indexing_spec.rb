@@ -5,11 +5,11 @@ require 'money'
 
  
 
-# $DB['delete from aggregates'].delete
-# $DB['delete from aggregate_events'].delete
-# $DB['delete from aggregate_index_decimals'].delete
-# $DB['delete from aggregate_index_integers'].delete
-# $DB['delete from aggregate_index_strings'].delete
+$DB['delete from aggregates'].delete
+$DB['delete from aggregate_events'].delete
+$DB['delete from aggregate_index_decimals'].delete
+$DB['delete from aggregate_index_integers'].delete
+$DB['delete from aggregate_index_strings'].delete
 
 
 
@@ -60,7 +60,7 @@ end
   #----------------------------------------------------------------
 
   object = TestXXXPerson.load_from_hash   params
-  puts "JSON =   #{JSON.generate(object.to_h)}"
+  #puts "JSON =   #{JSON.generate(object.to_h)}"
   TestXXXPerson.put object, 'hired', 'smithmr'  
 
   #----------------------------------------------------------------

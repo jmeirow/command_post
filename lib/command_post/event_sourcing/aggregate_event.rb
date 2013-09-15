@@ -59,7 +59,6 @@ module CommandPost
       new_obj.keys.each do |key|
         chgs[key] = new_obj[key] unless old_obj.keys.include?(key) && old_obj[key] == new_obj[key]
       end
-      binding.pry
       chgs 
     end
 
