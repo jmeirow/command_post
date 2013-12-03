@@ -6,12 +6,11 @@ require 'sequel'
 
 module CommandPost
 
-
-  $DB ||= Connection.db_cqrs
-
   class Aggregate   
    
-    @@prep_stmt_insert ||= $DB[:aggregates].prepare(:insert,  :insert_aggregate, :aggregate_id => :$aggregate_id, :aggregate_type => :$aggregate_type, :content => :$content )
+    def self.db
+      @db ||= Connection.db_cqrs
+    end
 
     def self.update_index object, index_value , field
       index_field = "#{object.class.to_s}.#{field.to_s}"
@@ -26,17 +25,19 @@ module CommandPost
  
 
       if (version) == 1
-        @@prep_stmt_insert.call(:aggregate_id => aggregate_id.to_i, :aggregate_type => aggregate_type  , :content => content  ) 
+
+        prep_stmt_insert ||= db[:aggregates].prepare(:insert,  :insert_aggregate, :aggregate_id => :$aggregate_id, :aggregate_type => :$aggregate_type, :content => :$content )
+        prep_stmt_insert.call(:aggregate_id => aggregate_id.to_i, :aggregate_type => aggregate_type  , :content => content  ) 
         
         object = Aggregate.get_by_aggregate_id Object.const_get(aggregate_type), aggregate_id
 
         object.index_fields.each do |field|
           index_value = object.send field
           index_field = "#{object.class.to_s}.#{field.to_s}"
-          $DB["INSERT INTO #{Persistence.compute_index_table_name(index_value) }  (aggregate_id , index_value, index_field ) values (?, ?, ?) ", aggregate_id,  index_value,  index_field ].insert
+          db["INSERT INTO #{Persistence.compute_index_table_name(index_value) }  (aggregate_id , index_value, index_field ) values (?, ?, ?) ", aggregate_id,  index_value,  index_field ].insert
         end
       else
-        $DB["UPDATE aggregates set content = ?  where aggregate_id = ?", content ,  aggregate_id ].update
+        db["UPDATE aggregates set content = ?  where aggregate_id = ?", content ,  aggregate_id ].update
         object = Aggregate.get_by_aggregate_id Object.const_get(aggregate_type), aggregate_id
         object.index_fields.each do |field|
           index_value = object.send field
@@ -50,7 +51,7 @@ module CommandPost
 
     def self.get_by_aggregate_id aggregate_type ,aggregate_id 
       hash = Hash.new
-      $DB.fetch("SELECT * FROM aggregates WHERE aggregate_id = ?",  aggregate_id ) do |row|
+      db.fetch("SELECT * FROM aggregates WHERE aggregate_id = ?",  aggregate_id ) do |row|
         hash = JSON.parse(row[:content])
       end
       aggregate_type.load_from_hash(HashUtil.symbolize_keys(hash))
@@ -60,7 +61,7 @@ module CommandPost
 
     def self.where(aggregate_type)
       results = Array.new
-      $DB.fetch("SELECT * FROM aggregates WHERE aggregate_type = ?", aggregate_type.to_s) do |row|
+      db.fetch("SELECT * FROM aggregates WHERE aggregate_type = ?", aggregate_type.to_s) do |row|
         hash =  JSON.parse(row[:content])
         results << aggregate_type.load_from_hash(HashUtil.symbolize_keys(hash))
       end
@@ -70,7 +71,7 @@ module CommandPost
 
     def self.get_for_indexed_single_value (sql, query_value, aggregate_type)
       results = Array.new
-      $DB.fetch(sql, query_value ) do |row|
+      db.fetch(sql, query_value ) do |row|
         hash =  JSON.parse(row[:content])
         results << aggregate_type.load_from_hash(HashUtil.symbolize_keys(hash))
       end
@@ -81,7 +82,7 @@ module CommandPost
 
     def self.get_for_indexed_multiple_values (sql, aggregate_type)
       results = Array.new
-      $DB.fetch(sql ) do |row|
+      db.fetch(sql ) do |row|
         hash =  JSON.parse(row[:content])
         results << aggregate_type.load_from_hash(  HashUtil.symbolize_keys(hash))
       end

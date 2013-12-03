@@ -8,14 +8,6 @@ module CommandPost
 
     attr_accessor :aggregate_type, :aggregate_id, :content, :transaction_id, :transacted, :event_description , :object, :changes, :user_id, :call_stack
 
-    @@prepared_statement ||= $DB[:aggregate_events].prepare(:insert,  :insert_aggregate_event, 
-                                            :aggregate_type => :$aggregate_type, 
-                                            :aggregate_id => :$aggregate_id, 
-                                            :content => :$content, 
-                                            :transaction_id => :$transaction_id, 
-                                            :transacted => :$transacted, 
-                                            :event_description => :$event_description,
-                                            :user_id => :$user_id   )
     @@required_by_txn = [ "aggregate_type", "aggregate_id", "event_description", "content", "transaction_id", "transacted" ]
 
     def initialize
@@ -33,7 +25,7 @@ module CommandPost
 
       #binding.pry
 
-      $DB.transaction do 
+      CommandPost::Connection.db_cqrs.transaction do 
         changes =  get_changes(object)
         #binding.pry
         if changes.keys.include?(:aggregate_info) && changes[:aggregate_info][:version] != object.aggregate_info[:version]
@@ -81,7 +73,7 @@ module CommandPost
       hash = Hash.new
       cnt = 0
       results = Array.new 
-      $DB.fetch("SELECT  transaction_id, transacted, aggregate_id,  user_id, event_description  FROM aggregate_events WHERE aggregate_id = ? order by transacted",  aggregate_id ) do |row|
+      CommandPost::Connection.db_cqrs.fetch("SELECT  transaction_id, transacted, aggregate_id,  user_id, event_description  FROM aggregate_events WHERE aggregate_id = ? order by transacted",  aggregate_id ) do |row|
         record = Array.new
         record << "=================================================================================================================================="
         record << "== Version: #{cnt += 1} "
@@ -89,7 +81,7 @@ module CommandPost
         record << "== Transacted: #{row[:transacted]}  "
         record << "== Event Description: #{row[:event_description]}  "
         record << "=================================================================================================================================="
-            $DB.fetch("SELECT content  FROM aggregate_events WHERE transaction_id = ?",   row[:transaction_id] ) do |content_row|
+            CommandPost::Connection.db_cqrs.fetch("SELECT content  FROM aggregate_events WHERE transaction_id = ?",   row[:transaction_id] ) do |content_row|
               hash = JSON.parse(content_row[:content])
               record << hash.pretty_inspect
             end
@@ -106,7 +98,15 @@ private
 
       json = JSON.generate(change)
       #binding.pry
-      @@prepared_statement.call(
+      prepared_statement ||= Connection.db_cqrs[:aggregate_events].prepare(:insert,  :insert_aggregate_event, 
+                                                :aggregate_type => :$aggregate_type, 
+                                                :aggregate_id => :$aggregate_id, 
+                                                :content => :$content, 
+                                                :transaction_id => :$transaction_id, 
+                                                :transacted => :$transacted, 
+                                                :event_description => :$event_description,
+                                                :user_id => :$user_id   )
+      prepared_statement.call(
         :aggregate_type => @aggregate_type.to_s, :aggregate_id => @aggregate_id, :content => json, :transaction_id => @transaction_id, :transacted => @transacted, :event_description => @event_description, :user_id => @user_id )
       Aggregate.replace  get_current_object 
     end
@@ -116,7 +116,7 @@ private
     def get_current_object 
       version = 0
       accumulated_object = Hash.new 
-      $DB.fetch("SELECT * FROM aggregate_events WHERE aggregate_id = ? order by transacted", @aggregate_id) do |row|
+      CommandPost::Connection.db_cqrs.fetch("SELECT * FROM aggregate_events WHERE aggregate_id = ? order by transacted", @aggregate_id) do |row|
         accumulated_object.merge!(HashUtil.symbolize_keys(JSON.parse(row[:content])))
         aggregate_details = Hash.new
         aggregate_details[:aggregate_type] = row[:aggregate_type]

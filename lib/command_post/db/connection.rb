@@ -9,7 +9,7 @@ module CommandPost
 
     def self.db_cqrs
       cs = connection_string || "postgres://localhost/cqrs?user=postgres&password=#{ENV['password']}"
-      Sequel.connect(cs)
+      @db ||= Sequel.connect(cs)
     end
 
   end
