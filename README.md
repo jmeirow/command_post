@@ -3,8 +3,15 @@ CommandPost
 
 CommandPost – the Command Pattern, Object Storage and Event Sourcing 
 
+## Setup
 
+1. Create a Postgres database, and run the SQL script in postgresql_setup.sql
+2. Pass a connection string to the library like so:
+````ruby
+  CommandPost::Connection.connection_string = 'YOUR CONNECTION STRING'
+````
 
+## What is CommandPost?
 
 CommandPost is a library that facilitates the retrieval and storage of objects. The objects are nothing more than Hashes, stored as JSON in a relational database. CommandPost has the following features to facillitate this:
 
