@@ -101,7 +101,7 @@ Before getting into some code that uses this objects, let's examine this schema 
 
 Starting with intializer of PurchaseOrderHeader, you can see we call 'super' right off the bat. That's because 'initialize' in Persistence sets up things we'll need.
 Next comes the schema declaration. Why talk about a "schema" for an object?  Well, I am the first to admit I am no fan of RDBMS for anything other than reporting and when I need aggregate functions that
-only RDBMSs can provide. I am also no fan of the "friction" RDBMS introduces into the development process. BUT... that doesn't mean I like to have some controls and order around things. There several SIGNIFICANT 
+only RDBMSs can provide. I am also no fan of the "friction" RDBMS introduces into the development process. BUT... that doesn't mean I like to have some controls and order around things. There are several SIGNIFICANT 
 advanatges that CommandPost storage provides over RDBMS storage. We'll cover them as they come up while discussing the mechanics of the schema declaration syntax.
 
 First, a schema is nothing more than a list of fields, each of which has some properties. What better way, what more 'Ruby way' of accomplishing this than with a Hash? So then, a 'schema' is a Hash. Each key is a field name
