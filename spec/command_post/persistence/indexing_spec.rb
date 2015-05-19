@@ -3,17 +3,6 @@ require 'securerandom'
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 require 'money'
 
- 
-
-$DB['delete from aggregates'].delete
-$DB['delete from aggregate_events'].delete
-$DB['delete from aggregate_index_decimals'].delete
-$DB['delete from aggregate_index_integers'].delete
-$DB['delete from aggregate_index_strings'].delete
-
-
-
-
 class TestXXXPerson < CommandPost::Persistence 
   include CommandPost::Identity
 
@@ -80,7 +69,7 @@ describe CommandPost::Identity do
 
     sql_cnts_in_array = 0
 
-    $DB.fetch("SELECT count(*) cnt FROM aggregate_index_integers WHERE index_field  = 'TestXXXPerson.favorite_number' and index_value in (1,2,3) " ) do |row|
+    CommandPost::Connection.db_cqrs.fetch("SELECT count(*) cnt FROM aggregate_index_integers WHERE index_field  = 'TestXXXPerson.favorite_number' and index_value in (1,2,3) " ) do |row|
       sql_cnts_in_array = row[:cnt]
     end
 
@@ -91,7 +80,7 @@ describe CommandPost::Identity do
   it 'select for decimal, equal' do 
 
     sql_cnts_eq = 0
-    $DB.fetch("SELECT count(*) cnt FROM aggregate_index_decimals WHERE index_field  = 'TestXXXPerson.hourly_rate' and index_value = 30.00 " ) do |row|
+    CommandPost::Connection.db_cqrs.fetch("SELECT count(*) cnt FROM aggregate_index_decimals WHERE index_field  = 'TestXXXPerson.hourly_rate' and index_value = 30.00 " ) do |row|
       sql_cnts_eq = row[:cnt]
     end
 
@@ -111,7 +100,7 @@ describe CommandPost::Identity do
     sql_counts_eq = 0
 
     ssn = ''
-    $DB.fetch("SELECT min(index_value) ssn FROM aggregate_index_strings WHERE index_field  = 'TestXXXPerson.ssn'  " ) do |row|
+    CommandPost::Connection.db_cqrs.fetch("SELECT min(index_value) ssn FROM aggregate_index_strings WHERE index_field  = 'TestXXXPerson.ssn'  " ) do |row|
       ssn  = row[:ssn]
     end
  
@@ -126,7 +115,7 @@ describe CommandPost::Identity do
 
     sql_cnts_in_array = 0
 
-    $DB.fetch("SELECT count(*) cnt FROM aggregate_index_integers WHERE index_field  = 'TestXXXPerson.favorite_number' and index_value  = 2  " ) do |row|
+    CommandPost::Connection.db_cqrs.fetch("SELECT count(*) cnt FROM aggregate_index_integers WHERE index_field  = 'TestXXXPerson.favorite_number' and index_value  = 2  " ) do |row|
       sql_cnts_in_array = row[:cnt]
     end
     ids = TestXXXPerson.favorite_number_eq(2)

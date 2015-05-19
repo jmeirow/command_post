@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gemspec
+
 gem 'sequel'
 gem 'pg'
 gem 'json-schema'
